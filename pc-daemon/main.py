@@ -11,11 +11,34 @@ logging.basicConfig(
 )
 
 # VARIABLES
-SERIAL_PORT: str = "/dev/ttyACM0"
+SERIAL_PORT: str = "/tmp/ttyV0"
 BAUD_RATE: int = 115200
 
 # only for testing
 test_line: str = '{ "type": "command", "id": 2, "status": "OK", "command": "volume1", "value": 20 }'
+
+
+def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str) -> None:
+    response: dict = {
+        "type": "ack",
+        "id": msg_id,
+        "status": "OK",  # OK or ERROR
+        "command": "confExec",
+        "value": cmd_response
+    }
+
+    while True:
+        try:
+            payload = json.dumps(response) + "\n"
+            ser.write(payload.encode("utf-8"))
+            ser.flush()
+            logging.info(f"ACK sent [ID: {msg_id}] status: {status}")
+            break
+        except Exception as e:
+            logging.error(f"Sending ACK failed: {e}. Retrying in 1s...")
+            time.sleep(1)
+            continue
+
 
 def main() -> None:
     while True:
@@ -44,7 +67,17 @@ def main() -> None:
 
                         logging.debug(f"Decoded JSON command:\ncommand: {cmd_name}\nvalue: {cmd_value}\nmessage id: {msg_id}")
 
-                        # TODO: write command execution and ack response
+                        # TODO: write command execution and get status from there
+                        # temporary:
+                        success: bool = True
+                        response: str = "Nawet prosty ten kod"
+
+                        status = "OK" if success else "ERROR"
+                        sendResponse(ser, status, response, msg_id)
+
+                    else:
+                        logging.warning(f'No "command" field in packet: {data}')
+
 
         except serial.SerialException as e:
             logging.error(f"Lost serial port connection with {SERIAL_PORT}: {e}. Reconnecting in 5s...")
