@@ -3,6 +3,8 @@ import serial
 import json
 import time
 
+import command_mapping
+
 # Logger init
 # Default logging to stdout, systemd will redirect to journalctl
 logging.basicConfig(
@@ -15,7 +17,7 @@ SERIAL_PORT: str = "/tmp/ttyV0"
 BAUD_RATE: int = 115200
 
 # only for testing
-test_line: str = '{ "type": "command", "id": 2, "status": "OK", "command": "volume1", "value": 20 }'
+test_line: str = '{ "type": "command", "id": 2, "status": "OK", "input": "volume", "inputID": 1 "value": 20 }'
 
 
 def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str) -> None:
@@ -61,16 +63,27 @@ def main() -> None:
                         continue
 
                     if isinstance(data, dict) and "command" in data:
-                        cmd_name = data.get("command")
+                        cmd_input = data.get("input")
+                        cmd_inputID = data.get("inputID")
                         cmd_value = data.get("value")
                         msg_id: str = str(data.get("id", "0"))
 
-                        logging.debug(f"Decoded JSON command:\ncommand: {cmd_name}\nvalue: {cmd_value}\nmessage id: {msg_id}")
+                        logging.debug(f"Decoded JSON command:\ninput: {cmd_input}\ninput ID: {cmd_inputID}\nvalue: {cmd_value}\nmessage id: {msg_id}")
 
-                        # TODO: write command execution and get status from there
-                        # temporary:
-                        success: bool = True
-                        response: str = "Nawet prosty ten kod"
+                        # Safely convert cmd_value & cmd_inputID to int when possible
+                        try:
+                            cmd_value_int = int(cmd_value) if cmd_value is not None else 0
+                        except (ValueError, TypeError):
+                            logging.warning(f"Invalid input value: {cmd_value}. Using 0")
+                            cmd_value_int = 0
+                        try:
+                            cmd_inputID_int = int(cmd_inputID) if cmd_inputID is not None else 0
+                        except (ValueError, TypeError):
+                            logging.warning(f"Invalid input ID: {cmd_inputID}. Using 0")
+                            cmd_inputID_int = 0
+
+                        # executing the command
+                        success, response = command_mapping.executeCommand(str(cmd_input), cmd_inputID_int, cmd_value_int)
 
                         status = "OK" if success else "ERROR"
                         sendResponse(ser, status, response, msg_id)
