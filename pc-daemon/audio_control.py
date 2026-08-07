@@ -171,6 +171,15 @@ class AudioController:
 
         return inputs
 
+    def getDefaultOutputSink(self):
+        sinks = self.pulse.sink_list()
+    
+        # find default device
+        default_sink_name = self.pulse.server_info().default_sink_name # type: ignore
+        default_sink = next(s for s in sinks if s.name == default_sink_name)
+
+        return default_sink
+
     # APPS
     # volume stuff
     def setAppsVolume(self, apps_names: list[str], volume: float) -> None:
@@ -193,7 +202,7 @@ class AudioController:
         if sink_input:
             return int(self.pulse.volume_get_all_chans(sink_input[0]) * 100)
         else:
-            logging.debug(f"Did not find active sink input for {app_name}, returning 0")
+            logging.debug(f"getAppVolume: Did not find active sink input for {app_name}, returning 0")
             return 0
 
     def changeAppsVolume(self, apps_names: list[str], volume: float) -> None:
@@ -239,6 +248,75 @@ class AudioController:
         if sink_input:
             return sink_input[0].mute
         else:
-            logging.debug(f"Did not find active sink input for {app_name}, returning False")
+            logging.debug(f"getAppMute: Did not find active sink input for {app_name}, returning False")
             return False
 
+    # DEVICES
+    # outputs
+    # for now only volume on default (currently active) device (master volume)
+    # control is implemented, as there is no need for anything else
+
+    # volume stuff
+    def setMasterVolume(self, volume: float) -> None:
+        sink = self.getDefaultOutputSink()
+
+        # user error handling
+        volume = volume / 100  # convert from percent to float
+        volume = max(volume, 0)
+        volume = min(volume, 1)
+
+        if sink:
+            self.pulse.volume_set_all_chans(sink, volume)
+
+    def getMasterVolume(self) -> int:
+        sink = self.getDefaultOutputSink()
+
+        if sink:
+            return int(self.pulse.volume_get_all_chans(sink) * 100)
+        else:
+            logging.warning("getMasterVolume: No default output device found, returning 0")
+            return 0
+
+    def changeMasterVolume(self, volume: float) -> None:
+        sink = self.getDefaultOutputSink()
+
+        volume = volume / 100
+
+        if sink:
+            current_volume = self.getMasterVolume() / 100
+            current_volume += volume  # calculate new master volume
+
+            # limiting range to prevent soft boost
+            current_volume = max(current_volume, 0)
+            current_volume = min(current_volume, 1)
+
+            self.pulse.volume_set_all_chans(sink, current_volume)
+
+
+    # mute stuff
+    def setMasterMute(self, mute: bool=True) -> None:
+        sink = self.getDefaultOutputSink()
+
+        if sink:
+            self.pulse.mute(sink, mute=mute)
+
+    def toggleMasterMute(self) -> None:
+        sink = self.getDefaultOutputSink()
+
+        if sink:
+            self.pulse.mute(sink, mute=not sink.mute)
+
+    def getMasterMute(self) -> bool:
+        sink = self.getDefaultOutputSink()
+        
+        if sink:
+            return sink.mute
+        else:
+            logging.warning("getMasterMute: No default output device found, returning False")
+            return False
+
+    # TODO: add inputs control in the future
+
+if __name__ == "__main__":
+    audio = AudioController()
+    audio.changeMasterVolume(10)
