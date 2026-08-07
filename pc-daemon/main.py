@@ -2,6 +2,7 @@ import logging
 import serial
 import json
 import time
+import argparse
 
 import command_mapping
 
@@ -41,9 +42,20 @@ def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str
             time.sleep(1)
             continue
 
-
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Serial-Audio-Controller daemon")
+    parser.add_argument(
+        "-m", "--mapping",
+        default="/etc/SAC-daemon/mapping.json",
+        help="Path to inputs mapping file"
+    )
+
+    args = parser.parse_args()
+
     while True:
+        # load the mapping json file
+        mapping = command_mapping.loadMapping(args.mapping)
+
         try:
             logging.info(f"Connecting to {SERIAL_PORT}...")
             with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
@@ -83,7 +95,7 @@ def main() -> None:
                             cmd_inputID_int = 0
 
                         # executing the command
-                        success, response = command_mapping.executeCommand(str(cmd_input), cmd_inputID_int, cmd_value_int)
+                        success, response = command_mapping.executeCommand(mapping, str(cmd_input), cmd_inputID_int, cmd_value_int)
 
                         status = "OK" if success else "ERROR"
                         sendResponse(ser, status, response, msg_id)
@@ -99,7 +111,6 @@ def main() -> None:
         except Exception as e:
             logging.critical(f"Unexpected error in main loop: {e}. Rerunning the loop in 5s...")
             time.sleep(5)
-
 
 
 if __name__ == "__main__":

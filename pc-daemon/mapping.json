@@ -1,0 +1,7 @@
+{
+    "encoders": [
+        {"command": "volume",
+        "id": 0,
+        "apps": ["spotify, brave-browser"]}
+    ]
+}
