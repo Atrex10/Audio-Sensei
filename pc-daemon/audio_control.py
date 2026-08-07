@@ -1,6 +1,7 @@
 import pulsectl
 import subprocess
 import logging
+import time
 
 METADATA_KEYS: list[str] = ["title", "artist", "album"]
 
@@ -145,4 +146,99 @@ class PlaybackController:
 
         return metadata
 
+class AudioController:
+    def __init__(self) -> None:
+        while True:
+            try:
+                self.pulse = pulsectl.Pulse("SAC-pulse-daemon")
+                break
+            except Exception as e:
+                logging.critical(f"Failed to connect to audio server: {e}. Retrying in 5s...")
+                time.sleep(5)
+
+
+    def getSinkInputsFromList(self, apps_names: list[str]) -> list:
+        sink_inputs = self.pulse.sink_input_list()
+
+        inputs: list = []
+
+        for sink_input in sink_inputs:
+            input_name = sink_input.proplist.get("application.name", "Unknown application")
+            logging.debug(f"Detected app: {input_name}")
+
+            if input_name in apps_names:
+                inputs.append(sink_input)
+
+        return inputs
+
+    # APPS
+    # volume stuff
+    def setAppsVolume(self, apps_names: list[str], volume: float) -> None:
+        # user error handling
+        volume = volume / 100  # convert from percent to float
+        volume = max(volume, 0)
+        volume = min(volume, 1)
+
+        sink_inputs = self.getSinkInputsFromList(apps_names)
+
+        if not sink_inputs:
+            return
+        
+        for sink_input in sink_inputs:
+            self.pulse.volume_set_all_chans(sink_input, volume)
+
+    def getAppVolume(self, app_name: str) -> int:
+        sink_input = self.getSinkInputsFromList([app_name])
+
+        if sink_input:
+            return int(self.pulse.volume_get_all_chans(sink_input[0]) * 100)
+        else:
+            logging.debug(f"Did not find active sink input for {app_name}, returning 0")
+            return 0
+
+    def changeAppsVolume(self, apps_names: list[str], volume: float) -> None:
+        sink_inputs = self.getSinkInputsFromList(apps_names)
+
+        volume = volume / 100  # convert from percent to float
+
+        if not sink_inputs:
+            return
+
+        for sink_input in sink_inputs:
+            input_volume = self.getAppVolume(sink_input.proplist.get("application.name", "Unknown application")) / 100
+            input_volume += volume  # calculate new app volume
+
+            # limiting range to prevent soft boost
+            input_volume = max(input_volume, 0)
+            input_volume = min(input_volume, 1)
+
+            self.pulse.volume_set_all_chans(sink_input, input_volume)
+
+    # mute stuff
+    def setAppsMute(self, apps_names: list[str], mute: bool=True) -> None:
+        sink_inputs = self.getSinkInputsFromList(apps_names)
+
+        if not sink_inputs:
+            return
+
+        for sink_input in sink_inputs:
+            self.pulse.mute(sink_input, mute=mute)
+
+    def toggleAppsMute(self, apps_names: list[str]) -> None:
+        sink_inputs = self.getSinkInputsFromList(apps_names)
+
+        if not sink_inputs:
+            return
+
+        for sink_input in sink_inputs:
+            self.pulse.mute(sink_input, mute=not sink_input.mute)
+
+    def getAppMute(self, app_name: str) -> bool:
+        sink_input = self.getSinkInputsFromList([app_name])
+        
+        if sink_input:
+            return sink_input[0].mute
+        else:
+            logging.debug(f"Did not find active sink input for {app_name}, returning False")
+            return False
 
