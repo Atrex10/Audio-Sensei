@@ -169,6 +169,7 @@ class AudioController:
             if input_name in apps_names:
                 inputs.append(sink_input)
 
+        logging.debug(f"Found sink inputs: {inputs} for names: {apps_names}")
         return inputs
 
     def getDefaultOutputSink(self):
@@ -235,7 +236,8 @@ class AudioController:
             return
 
         for sink_input in sink_inputs:
-            input_volume = self.getAppVolume(sink_input.proplist.get("application.name", "Unknown application")) / 100
+            input_volume = self.pulse.volume_get_all_chans(sink_input)
+            # logging.debug(f"Current volume for {sink_input}: {input_volume}")
             input_volume += volume  # calculate new app volume
 
             # limiting range to prevent soft boost
