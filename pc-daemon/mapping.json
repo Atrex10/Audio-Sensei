@@ -1,7 +1,67 @@
 {
-    "encoders": [
-        {"command": "volume",
-        "id": 0,
-        "apps": ["spotify, brave-browser"]}
+    "encoder": [
+        {
+            "command": "audio.changeMasterVolume(_value * _multiplier)",
+            "value_multiplier": 5
+        },
+        {
+            "command": "audio.changeAppsVolume(_apps, _value * _multiplier)",
+            "value_multiplier": 5,
+            "apps": ["Spotify"]
+        },
+        {
+            "command": "audio.changeAppsVolume(_apps, _value * _multiplier)",
+            "value_multiplier": 5,
+            "apps": ["Brave", "Firefox"]
+        },
+        {
+            "command": "audio.changeAppsVolume(_apps, _value * _multiplier)",
+            "value_multiplier": 5,
+            "apps": ["Chromium"]
+        }
+    ],
+
+    "button": [
+        {
+            "command": "audio.toggleMasterMute()"
+        },
+        {
+            "command": "audio.toggleAppsMute(_apps)",
+            "apps": ["Spotify"]
+        },
+        {
+            "command": "audio.toggleAppsMute(_apps)",
+            "apps": ["Brave", "Firefox"]
+        },
+        {
+            "command": "audio.toggleAppsMute(_apps)",
+            "apps": ["Chromium"]
+        },
+
+
+        {
+            "command": "playback.toggleShuffle()"
+        },
+        {
+            "command": "playback.toggleLoop()"
+        },
+        {
+            "command": "None"
+        },
+        {
+            "command": "playback.prevTrack()"
+        },
+        {
+            "command": "playback.pausePlay()"
+        },
+        {
+            "command": "playback.nextTrack()"
+        }
+    ],
+
+    "read": [
+        {
+            "command": "playback.getMetadata()"
+        }
     ]
 }
