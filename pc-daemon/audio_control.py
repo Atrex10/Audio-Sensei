@@ -183,6 +183,13 @@ class AudioController:
     # APPS
     # volume stuff
     def setAppsVolume(self, apps_names: list[str], volume: float) -> None:
+        """
+        Set volume in specified apps (at once)
+        App name is an application.name property of the sink input
+        :param apps_names: a list of app names the function will affect
+        :param volume: volume in range 0-100 (percent)
+        """
+
         # user error handling
         volume = volume / 100  # convert from percent to float
         volume = max(volume, 0)
@@ -197,6 +204,13 @@ class AudioController:
             self.pulse.volume_set_all_chans(sink_input, volume)
 
     def getAppVolume(self, app_name: str) -> int:
+        """
+        Read app volume
+        App name is an application.name property of the sink input
+        :param app_name: name of the app to read from
+        :return: volume in range 0-100 (percent)
+        """
+
         sink_input = self.getSinkInputsFromList([app_name])
 
         if sink_input:
@@ -206,6 +220,13 @@ class AudioController:
             return 0
 
     def changeAppsVolume(self, apps_names: list[str], volume: float) -> None:
+        """
+        Change volume in specified apps by specified amount (at once)
+        App name is an application.name property of the sink input
+        :param apps_names: a list of app names the function will affect
+        :param volume: volume offset/change, in percent
+        """
+
         sink_inputs = self.getSinkInputsFromList(apps_names)
 
         volume = volume / 100  # convert from percent to float
@@ -225,6 +246,13 @@ class AudioController:
 
     # mute stuff
     def setAppsMute(self, apps_names: list[str], mute: bool=True) -> None:
+        """
+        Set apps mute state to specified (at once)
+        App name is an application.name property of the sink input
+        :param apps_names: a list of app names the function will affect
+        :param mute: new mute state of the apps
+        """
+
         sink_inputs = self.getSinkInputsFromList(apps_names)
 
         if not sink_inputs:
@@ -234,6 +262,14 @@ class AudioController:
             self.pulse.mute(sink_input, mute=mute)
 
     def toggleAppsMute(self, apps_names: list[str]) -> None:
+        """
+        Toggle mute states in specified appss (at once)
+        Notice, that this function will toggle all the states independently,
+        and might not set all apps to the same state
+        App name is an application.name property of the sink input
+        :param apps_names: a list of app names the function will affect
+        """
+
         sink_inputs = self.getSinkInputsFromList(apps_names)
 
         if not sink_inputs:
@@ -243,6 +279,13 @@ class AudioController:
             self.pulse.mute(sink_input, mute=not sink_input.mute)
 
     def getAppMute(self, app_name: str) -> bool:
+        """
+        Read app mute state
+        App name is an application.name property of the sink input
+        :param apps_name: name of the app to read from
+        :return: read mute state in bool type
+        """
+
         sink_input = self.getSinkInputsFromList([app_name])
         
         if sink_input:
@@ -258,6 +301,13 @@ class AudioController:
 
     # volume stuff
     def setMasterVolume(self, volume: float) -> None:
+        """
+        Set master volume of the system
+        This will set the volume of the default (currently active)
+        output device, effectively master volume
+        :param volume: volume in range 0-100 (percent)
+        """
+
         sink = self.getDefaultOutputSink()
 
         # user error handling
@@ -269,6 +319,13 @@ class AudioController:
             self.pulse.volume_set_all_chans(sink, volume)
 
     def getMasterVolume(self) -> int:
+        """
+        Get master volume of the system
+        This will read the volume of the default (currently active)
+        output device, effectively master volume
+        :return: volume in range 0-100 (percent)
+        """
+        
         sink = self.getDefaultOutputSink()
 
         if sink:
@@ -278,6 +335,12 @@ class AudioController:
             return 0
 
     def changeMasterVolume(self, volume: float) -> None:
+        """
+        Change system master volume by specified amount
+        This will set the volume of the default (currently active)
+        output device, effectively master volume
+        :param volume: volume offset/change in percent
+        """
         sink = self.getDefaultOutputSink()
 
         volume = volume / 100
@@ -295,18 +358,38 @@ class AudioController:
 
     # mute stuff
     def setMasterMute(self, mute: bool=True) -> None:
+        """
+        Set system master volume mute state to specified
+        This will set the mute state of the default (currently active)
+        output device, effectively master volume
+        :param mute: new mute state of the master volume
+        """
+
         sink = self.getDefaultOutputSink()
 
         if sink:
             self.pulse.mute(sink, mute=mute)
 
     def toggleMasterMute(self) -> None:
+        """
+        Toggle system master volume mute state
+        This will set the mute state of the default (currently active)
+        output device, effectively master volume
+        """
+
         sink = self.getDefaultOutputSink()
 
         if sink:
             self.pulse.mute(sink, mute=not sink.mute)
 
     def getMasterMute(self) -> bool:
+        """
+        Read system master volume mute state
+        This will read the mute state of the default (currently active)
+        output device, effectively master volume
+        :return: read mute state in bool type
+        """
+
         sink = self.getDefaultOutputSink()
         
         if sink:
