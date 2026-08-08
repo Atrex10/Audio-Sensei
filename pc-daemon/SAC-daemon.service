@@ -1,0 +1,22 @@
+[Unit]
+Description=Serial Audio Controller daemon
+After=network.target
+
+[Service]
+Type=simple
+User=SAC-daemon
+Group=SAC-daemon
+WorkingDirectory=/opt/SAC-daemon
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/opt/SAC-daemon/.venv/bin/python /opt/SAC-daemon/main.py --mapping /etc/SAC-daemon/mapping.json
+Restart=always
+RestartSec=5
+
+ProtectSystem=full
+ProtectHome=true
+
+NoNewPrivileges=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
