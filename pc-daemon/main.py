@@ -14,11 +14,11 @@ logging.basicConfig(
 )
 
 # VARIABLES
-SERIAL_PORT: str = "/tmp/ttyV0"
+SERIAL_PORT: str = "/tmp/ACM0"
 BAUD_RATE: int = 115200
 
 # only for testing
-test_line: str = '{ "type": "command", "id": 2, "status": "OK", "input": "volume", "inputID": 1 "value": 20 }'
+# test_line: str = '{ "type": "command", "id": 2, "status": "OK", "input": "encoder", "inputID": 0, "value": 2 }'
 
 
 def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str) -> None:
@@ -62,8 +62,10 @@ def main() -> None:
                 logging.info(f"Connected to {SERIAL_PORT}")
 
                 while True:
-                    # raw_line: str = ser.readline().decode("utf-8", errors="ignore").strip()
-                    raw_line: str = test_line  # for testing
+                    raw_line: str = ser.readline().decode("utf-8", errors="ignore").strip()
+                    # raw_line: str = test_line  # for testing
+
+                    logging.debug(f"Received line: {raw_line}")
 
                     if not raw_line:
                         continue
@@ -74,7 +76,7 @@ def main() -> None:
                         logging.warning(f"JSON parsing error: {raw_line}")
                         continue
 
-                    if isinstance(data, dict) and "command" in data:
+                    if isinstance(data, dict) and "input" in data and "inputID" in data:
                         cmd_input = data.get("input")
                         cmd_inputID = data.get("inputID")
                         cmd_value = data.get("value")
