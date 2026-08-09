@@ -7,10 +7,10 @@ from pathlib import Path
 audio = audio_control.AudioController()
 playback = audio_control.PlaybackController()
 
-def loadMapping(configPath: str) -> dict:
-    path = Path(configPath)
+def loadMapping(mappingPath: str) -> dict:
+    path = Path(mappingPath)
     if not path.is_file():
-        logging.error(f"Mapping error: {configPath} does not exist")
+        logging.critical(f"Mapping error: {mappingPath} does not exist")
         sys.exit(1)
 
     with open(path, "r") as f:

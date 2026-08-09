@@ -150,7 +150,7 @@ class AudioController:
     def __init__(self) -> None:
         while True:
             try:
-                self.pulse = pulsectl.Pulse("SAC-pulse-daemon")
+                self.pulse = pulsectl.Pulse("Audio-Sensei-pulse-daemon")
                 break
             except Exception as e:
                 logging.critical(f"Failed to connect to audio server: {e}. Retrying in 5s...")

@@ -5,9 +5,9 @@ After=network.target sound.target
 [Service]
 Type=simple
 
-WorkingDirectory=%h/.local/share/SAC-daemon
+WorkingDirectory=%h/.local/share/Audio-Sensei-daemon
 Environment="PYTHONUNBUFFERED=1"
-ExecStart=%h/.local/share/SAC-daemon/.venv/bin/python %h/.local/share/SAC-daemon/main.py --mapping %h/.config/SAC-daemon/mapping.json
+ExecStart=%h/.local/share/Audio-Sensei-daemon/.venv/bin/python %h/.local/share/Audio-Sensei-daemon/main.py --mapping %h/.config/Audio-Sensei-daemon/mapping.json --config %h/.config/Audio-Sensei-daemon/config.toml
 
 Restart=always
 RestartSec=5

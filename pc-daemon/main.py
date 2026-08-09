@@ -1,6 +1,9 @@
 import logging
 import serial
 import json
+import tomllib
+import sys
+from pathlib import Path
 import time
 import argparse
 import os
@@ -15,11 +18,23 @@ logging.basicConfig(
 )
 
 # VARIABLES
-SERIAL_PORT: str = "/tmp/ACM0"
-BAUD_RATE: int = 115200
+# SERIAL_PORT: str = "/tmp/ACM0"
+# BAUD_RATE: int = 115200
 
 # only for testing
 # test_line: str = '{ "type": "command", "id": 2, "status": "OK", "input": "encoder", "inputID": 0, "value": 2 }'
+
+
+def loadConfig(configPath: str) -> dict:
+    path = Path(configPath)
+    if not path.is_file():
+        logging.critical(f"Config error: {configPath} does not exist")
+        sys.exit(1)
+
+    with open(path, "rb") as f:
+        data = tomllib.load(f)
+        logging.debug(f"Loaded config:\n{data}")
+        return data
 
 
 def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str) -> None:
@@ -46,8 +61,14 @@ def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serial-Audio-Controller daemon")
     parser.add_argument(
+        "-c", "--config",
+        default=f"{os.path.expanduser('~')}/.config/Audio-Sensei-daemon/config.toml",
+        help="Path to configuration file"
+    )
+
+    parser.add_argument(
         "-m", "--mapping",
-        default=f"{os.path.expanduser('~')}/.config/SAC-daemon/mapping.json",
+        default=f"{os.path.expanduser('~')}/.config/Audio-Sensei-daemon/mapping.json",
         help="Path to inputs mapping file"
     )
 
@@ -56,11 +77,19 @@ def main() -> None:
     while True:
         # load the mapping json file
         mapping = command_mapping.loadMapping(args.mapping)
+        config = loadConfig(args.config)
 
         try:
-            logging.debug(f"Connecting to {SERIAL_PORT}...")
-            with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
-                logging.info(f"Connected to {SERIAL_PORT}")
+            config["serial"]["port"]
+            config["serial"]["baudrate"]
+        except KeyError:
+            logging.critical("Invalid configuration file, some fields may be missing")
+            sys.exit(1)
+
+        try:
+            logging.debug(f"Connecting to {config["serial"]["port"]}...")
+            with serial.Serial(config["serial"]["port"], config["serial"]["baudrate"], timeout=1) as ser:
+                logging.info(f"Connected to {config["serial"]["port"]}")
 
                 while True:
                     raw_line: str = ser.readline().decode("utf-8", errors="ignore").strip()
@@ -108,7 +137,7 @@ def main() -> None:
 
 
         except serial.SerialException as e:
-            logging.debug(f"Failed serial port connection with {SERIAL_PORT}: {e}. Reconnecting in 1s...")
+            logging.debug(f"Failed serial port connection with {config["serial"]["port"]}: {e}. Reconnecting in 1s...")
             time.sleep(1)
 
         except Exception as e:

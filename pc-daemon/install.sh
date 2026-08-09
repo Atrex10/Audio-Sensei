@@ -10,8 +10,8 @@ fi
 if [ ! -d "/home/$USER/.config" ]; then
     mkdir /home/$USER/.config
 fi
-if [ ! -d "/home/$USER/.config/SAC-daemon" ]; then
-    mkdir /home/$USER/.config/SAC-daemon
+if [ ! -d "/home/$USER/.config/Audio-Sensei-daemon" ]; then
+    mkdir /home/$USER/.config/Audio-Sensei-daemon
 fi
 if [ ! -d "/home/$USER/.config/systemd" ]; then
     mkdir /home/$USER/.config/systemd
@@ -21,15 +21,18 @@ if [ ! -d "/home/$USER/.config/systemd/user" ]; then
 fi
 
 # copying source code
-cp -r ./ /home/$USER/.local/share/SAC-daemon/
+cp -r ./ /home/$USER/.local/share/Audio-Sensei-daemon/
 
 # copying mapping file 
-cp ./mapping.json /home/$USER/.config/SAC-daemon/mapping.json
+cp ./mapping.json /home/$USER/.config/Audio-Sensei-daemon/mapping.json
+
+# copying config file
+cp ./config.toml /home/$USER/.config/Audio-Sensei-daemon/config.toml
 
 # copying systemd service unit
-cp ./SAC-daemon.service /home/$USER/.config/systemd/user/SAC-daemon.service
+cp ./Audio-Sensei-daemon.service /home/$USER/.config/systemd/user/Audio-Sensei-daemon.service
 
 # systemd reload and starting deamon
 systemctl --user daemon-reload
-systemctl --user enable --now SAC-daemon.service
+systemctl --user enable --now Audio-Sensei-daemon.service
 
