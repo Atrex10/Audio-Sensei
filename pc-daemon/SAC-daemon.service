@@ -7,7 +7,7 @@ Type=simple
 
 WorkingDirectory=%h/.local/share/SAC-daemon
 Environment="PYTHONUNBUFFERED=1"
-ExecStart=%h/.local/share/SAC-daemon/.venv/bin/python %h/.local/share/SAC-daemon/main.py --mapping %h/.config/SAC-daemon/mapping.json
+ExecStart=%h/.local/share/SAC-daemon/.venv/bin/python %h/.local/share/SAC-daemon/main.py --mapping %h/.config/SAC-daemon/mapping.json --config %h/.config/SAC-daemon/config.toml
 
 Restart=always
 RestartSec=5

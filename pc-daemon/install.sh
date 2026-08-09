@@ -26,6 +26,9 @@ cp -r ./ /home/$USER/.local/share/SAC-daemon/
 # copying mapping file 
 cp ./mapping.json /home/$USER/.config/SAC-daemon/mapping.json
 
+# copying config file
+cp ./config.toml /home/$USER/.config/SAC-daemon/config.toml
+
 # copying systemd service unit
 cp ./SAC-daemon.service /home/$USER/.config/systemd/user/SAC-daemon.service
 
