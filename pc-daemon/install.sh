@@ -1,37 +1,35 @@
 #!/bin/bash
 
 # preparing destination folders
-mkdir /opt/
-mkdir /etc/
-mkdir /etc/SAC-daemon/
+if [ ! -d "/home/$USER/.local" ]; then
+    mkdir /home/$USER/.local
+fi
+if [ ! -d "/home/$USER/.local/share" ]; then
+    mkdir /home/$USER/.local/share
+fi
+if [ ! -d "/home/$USER/.config" ]; then
+    mkdir /home/$USER/.config
+fi
+if [ ! -d "/home/$USER/.config/SAC-daemon" ]; then
+    mkdir /home/$USER/.config/SAC-daemon
+fi
+if [ ! -d "/home/$USER/.config/systemd" ]; then
+    mkdir /home/$USER/.config/systemd
+fi
+if [ ! -d "/home/$USER/.config/systemd/user" ]; then
+    mkdir /home/$USER/.config/systemd/user
+fi
 
 # copying source code
-cp -r ./ /opt/SAC-daemon/
+cp -r ./ /home/$USER/.local/share/SAC-daemon/
 
 # copying mapping file 
-cp ./mapping.json /etc/SAC-daemon/mapping.json
+cp ./mapping.json /home/$USER/.config/SAC-daemon/mapping.json
 
 # copying systemd service unit
-cp ./SAC-daemon.service /etc/systemd/system/SAC-daemon.service
+cp ./SAC-daemon.service /home/$USER/.config/systemd/user/SAC-daemon.service
 
-echo "Files copied"
-
-# creating user for the daemon
-useradd -r -s /bin/false SAC-daemon
-
-# setting the owner of the source code
-chown -R SAC-daemon:SAC-daemon /opt/SAC-daemon
-
-# setting mapping file to config only
-chown -R SAC-daemon:SAC-daemon /etc/SAC-daemon
-chmod 640 /etc/SAC-daemon/mapping.json
-
-echo "Privileges setup done"
-
-echo "Instalation complete"
-
-echo "Starting daemon"
 # systemd reload and starting deamon
-systemctl daemon-reload
-systemctl enable --now SAC-daemon.service
+systemctl --user daemon-reload
+systemctl --user enable --now SAC-daemon.service
 

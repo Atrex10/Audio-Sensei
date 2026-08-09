@@ -3,6 +3,7 @@ import serial
 import json
 import time
 import argparse
+import os
 
 import command_mapping
 
@@ -46,7 +47,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Serial-Audio-Controller daemon")
     parser.add_argument(
         "-m", "--mapping",
-        default="/etc/SAC-daemon/mapping.json",
+        default=f"{os.path.expanduser('~')}/.config/SAC-daemon/mapping.json",
         help="Path to inputs mapping file"
     )
 
@@ -57,7 +58,7 @@ def main() -> None:
         mapping = command_mapping.loadMapping(args.mapping)
 
         try:
-            logging.info(f"Connecting to {SERIAL_PORT}...")
+            logging.debug(f"Connecting to {SERIAL_PORT}...")
             with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
                 logging.info(f"Connected to {SERIAL_PORT}")
 
@@ -107,8 +108,8 @@ def main() -> None:
 
 
         except serial.SerialException as e:
-            logging.error(f"Lost serial port connection with {SERIAL_PORT}: {e}. Reconnecting in 5s...")
-            time.sleep(5)
+            logging.debug(f"Failed serial port connection with {SERIAL_PORT}: {e}. Reconnecting in 1s...")
+            time.sleep(1)
 
         except Exception as e:
             logging.critical(f"Unexpected error in main loop: {e}. Rerunning the loop in 5s...")
