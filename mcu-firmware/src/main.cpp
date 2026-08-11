@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Encoder.h>
 
 #include <inputs.h>
 
