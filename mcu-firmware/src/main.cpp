@@ -40,7 +40,26 @@ Button buttons[buttonCount] = {
 };
 
 void setup() {
+    Serial.begin(115200);  // only for testing, will be moved to separate class/file
+    while (!Serial) {;}  // wait for serial
+    Serial.println("Test");
+
+    // inputs setup
+    for (int i=0; i<encoderCount; i++) {
+        encoders[i].begin();
+    }
+
+    for (int i=0; i<buttonCount; i++) {
+        buttons[i].begin();
+    }
 }
 
 void loop() {
+    Serial.println("\n\n\nEncoders:");
+    for (int i=0; i<encoderCount; i++) {
+        Serial.println(encoders[i].read());
+    }
+    Serial.println("END");
+
+    delay(100);
 }
