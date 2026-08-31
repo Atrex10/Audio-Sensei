@@ -67,30 +67,4 @@ void setup() {
 }
 
 void loop() {
-    int value;
-    // temporary loop
-
-    // check the encoders
-    for (int i=0; i < encoderCount; i++) {
-        value = encoders[i].readAndReset();
-        if (checkInputActivity(value)) {
-            sendCmd2Queue(ENCODER, i, value);
-            Serial.println("encoder sent");
-        }
-    }
-
-    // check the buttons
-    for (int i=0; i < buttonCount; i++) {
-        value = buttons[i].readAndReset();
-        if (checkInputActivity(value)) {
-            sendCmd2Queue(BUTTON, i, value);
-            Serial.println("button sent");
-        }
-    }
-
-    Serial.print("Queue status. Used: ");
-    Serial.print(uxQueueMessagesWaiting(commandQueueHandle));
-    Serial.print(", available: ");
-    Serial.println(uxQueueSpacesAvailable(commandQueueHandle));
-    delay(100);
 }
