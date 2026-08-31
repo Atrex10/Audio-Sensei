@@ -1,6 +1,7 @@
+#include "mainHeader.h"
 #include <Arduino.h>
 
-#include <inputs.h>
+#include "inputs.h"
 
 // variables
 // INPUTS DEFINITIONS
