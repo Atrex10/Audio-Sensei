@@ -18,8 +18,9 @@ typedef struct {
     char value;
 } InputCommand;
 
-// queue handles
-QueueHandle_t commandQueue;
+// queue and task handles
+QueueHandle_t commandQueueHandle;
+TaskHandle_t processCommandHandle;
 
 void sendCmd2Queue(InputType type, char id, char value);
 
