@@ -6,6 +6,9 @@
 #include <queue.h>
 #include <task.h>
 
+#define QUEUE_SLOTS 10
+#define QUEUE_FULL_TIMEOUT_MS 10
+
 typedef enum {
     ENCODER,
     BUTTON,
@@ -19,8 +22,8 @@ typedef struct {
 } InputCommand;
 
 // queue and task handles
-QueueHandle_t commandQueueHandle;
-TaskHandle_t processCommandHandle;
+extern QueueHandle_t commandQueueHandle;
+extern TaskHandle_t processCommandHandle;
 
 void sendCmd2Queue(InputType type, char id, char value);
 

@@ -4,6 +4,9 @@
 
 #include "mainHeader.h"
 
+QueueHandle_t commandQueueHandle;
+TaskHandle_t processCommandHandle;
+
 
 void sendCmd2Queue(InputType type, char id, char value) {
     InputCommand newCmd;
@@ -20,7 +23,11 @@ void sendCmd2Queue(InputType type, char id, char value) {
 void processCommandTask(void *pvParameters) {
     InputCommand recvCmd;
 
-    for (;;) {
+    #ifdef DEBUG
+    Serial.println("Freertos task started");
+    #endif
+
+    while(1) {
         if (xQueueReceive(commandQueueHandle, &recvCmd, portMAX_DELAY) == pdPASS) {
             #ifdef DEBUG
             Serial.println("Received command");
@@ -38,7 +45,7 @@ void setupTask() {
     "Serial_data_task",     // text task name
     8192,                   // stack size (bytes)
     NULL,                   // args for task
-    2,                      // task priority (higher is more important)
+    1,                      // task priority (higher is more important)
     &processCommandHandle   // task handle
     );
 }

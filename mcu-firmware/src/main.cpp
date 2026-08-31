@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 #include "inputs.h"
+#include "freertos-task.h"
 
 // variables
 // INPUTS DEFINITIONS
@@ -40,9 +41,15 @@ Button buttons[buttonCount] = {
     Button(5)
 };
 
+bool checkInputActivity(int value) {
+    return value != 0;
+}
+
+
 void setup() {
     Serial.begin(115200);  // only for testing, will be moved to separate class/file
     while (!Serial) {;}  // wait for serial
+    delay(2000);
     Serial.println("Test");
 
     // inputs setup
@@ -53,14 +60,37 @@ void setup() {
     for (int i=0; i<buttonCount; i++) {
         buttons[i].begin();
     }
+
+    // task and queue setup
+    setupTask();
+    setupQueue();
 }
 
 void loop() {
-    Serial.println("\n\n\nEncoders:");
-    for (int i=0; i<encoderCount; i++) {
-        Serial.println(encoders[i].read());
-    }
-    Serial.println("END");
+    int value;
+    // temporary loop
 
+    // check the encoders
+    for (int i=0; i < encoderCount; i++) {
+        value = encoders[i].readAndReset();
+        if (checkInputActivity(value)) {
+            sendCmd2Queue(ENCODER, i, value);
+            Serial.println("encoder sent");
+        }
+    }
+
+    // check the buttons
+    for (int i=0; i < buttonCount; i++) {
+        value = buttons[i].readAndReset();
+        if (checkInputActivity(value)) {
+            sendCmd2Queue(BUTTON, i, value);
+            Serial.println("button sent");
+        }
+    }
+
+    Serial.print("Queue status. Used: ");
+    Serial.print(uxQueueMessagesWaiting(commandQueueHandle));
+    Serial.print(", available: ");
+    Serial.println(uxQueueSpacesAvailable(commandQueueHandle));
     delay(100);
 }
