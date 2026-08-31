@@ -1,5 +1,6 @@
 #include "mainHeader.h"
 #include <Arduino.h>
+#include <Ticker.h>
 
 #include "inputs.h"
 #include "freertos-task.h"
@@ -41,16 +42,55 @@ Button buttons[buttonCount] = {
     Button(5)
 };
 
+
+// VARIABLES
+const int updateInputsInterval = 100;  // ms
+
+
+// OBJECTS
+Ticker updateInputsTicker;
+
+
+// FUNCTIONS
 bool checkInputActivity(int value) {
     return value != 0;
 }
 
+void updateInputs() {
+    uint8_t value;
 
+    // check encoders
+    for (int i=0; i<encoderCount; i++) {
+        value = encoders[i].readAndReset();
+        if (checkInputActivity(value)) {
+            sendCmd2Queue(ENCODER, i, value, true);
+
+            #ifdef DEBUG
+            Serial.println("Detected encoder turn");
+            #endif
+        }
+    }
+
+    // check buttons
+    for (int i=0; i<buttonCount; i++) {
+        value = buttons[i].readAndReset();
+        if (checkInputActivity(value)) {
+            sendCmd2Queue(BUTTON, i, value, true);
+
+            #ifdef DEBUG
+            Serial.println("Detected button press");
+            #endif
+        }
+    }
+}
+
+
+// SETUP & LOOP
 void setup() {
     Serial.begin(115200);  // only for testing, will be moved to separate class/file
     while (!Serial) {;}  // wait for serial
-    delay(2000);
-    Serial.println("Test");
+    delay(1000);
+    Serial.println("Serial started");
 
     // inputs setup
     for (int i=0; i<encoderCount; i++) {
@@ -64,6 +104,9 @@ void setup() {
     // task and queue setup
     setupTask();
     setupQueue();
+
+    // tickers configuration
+    updateInputsTicker.attach_ms(updateInputsInterval, updateInputs);
 }
 
 void loop() {

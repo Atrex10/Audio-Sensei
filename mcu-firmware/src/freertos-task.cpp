@@ -8,14 +8,20 @@ QueueHandle_t commandQueueHandle;
 TaskHandle_t processCommandHandle;
 
 
-void sendCmd2Queue(InputType type, char id, char value) {
+void sendCmd2Queue(InputType type, char id, char value, bool isr) {
     InputCommand newCmd;
 
     newCmd.type = type;
     newCmd.id = id;
     newCmd.value = value;
 
-    xQueueSend(commandQueueHandle, &newCmd, pdMS_TO_TICKS(QUEUE_FULL_TIMEOUT_MS));  // wait max x ms if queue full
+    if (!isr) {
+        xQueueSend(commandQueueHandle, &newCmd, pdMS_TO_TICKS(QUEUE_FULL_TIMEOUT_MS));  // wait max x ms if queue full
+    } else {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xQueueSendFromISR(commandQueueHandle, &newCmd, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
 }
 
 
