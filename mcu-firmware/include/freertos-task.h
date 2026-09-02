@@ -12,7 +12,8 @@
 typedef enum {
     ENCODER,
     BUTTON,
-    POTMR
+    POTMR,
+    READ
 } InputType;
 
 typedef struct {

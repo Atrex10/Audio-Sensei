@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #include "mainHeader.h"
+#include "serial-comm.h"
 
 QueueHandle_t commandQueueHandle;
 TaskHandle_t processCommandHandle;
@@ -38,7 +39,9 @@ void processCommandTask(void *pvParameters) {
             #ifdef DEBUG
             Serial.println("Received command");
             #endif
-            // TODO: write jsoning and sending the command
+            
+            idCounter++;
+            sendJson(recvCmd.type, recvCmd.id, recvCmd.value, idCounter);
         }
     }
 }

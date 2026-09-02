@@ -3,4 +3,6 @@
 
 #define DEBUG
 
+extern unsigned int idCounter;
+
 #endif

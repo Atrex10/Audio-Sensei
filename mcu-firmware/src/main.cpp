@@ -47,6 +47,7 @@ Button buttons[buttonCount] = {
 // VARIABLES
 const int updateInputsInterval = 100;  // ms
 
+unsigned int idCounter = 0;
 
 // OBJECTS
 Ticker updateInputsTicker;
