@@ -4,6 +4,7 @@
 
 #include "inputs.h"
 #include "freertos-task.h"
+#include "serial-comm.h"
 
 // variables
 // INPUTS DEFINITIONS
@@ -87,10 +88,8 @@ void updateInputs() {
 
 // SETUP & LOOP
 void setup() {
-    Serial.begin(115200);  // only for testing, will be moved to separate class/file
-    while (!Serial) {;}  // wait for serial
-    delay(1000);
-    Serial.println("Serial started");
+    // serial setup
+    beginSerial();
 
     // inputs setup
     for (int i=0; i<encoderCount; i++) {
