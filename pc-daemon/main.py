@@ -74,18 +74,18 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # load the mapping json file
+    mapping = command_mapping.loadMapping(args.mapping)
+    config = loadConfig(args.config)
+
+    try:
+        config["serial"]["port"]
+        config["serial"]["baudrate"]
+    except KeyError:
+        logging.critical("Invalid configuration file, some fields may be missing")
+        sys.exit(1)
+
     while True:
-        # load the mapping json file
-        mapping = command_mapping.loadMapping(args.mapping)
-        config = loadConfig(args.config)
-
-        try:
-            config["serial"]["port"]
-            config["serial"]["baudrate"]
-        except KeyError:
-            logging.critical("Invalid configuration file, some fields may be missing")
-            sys.exit(1)
-
         try:
             logging.debug(f"Connecting to {config["serial"]["port"]}...")
             with serial.Serial(config["serial"]["port"], config["serial"]["baudrate"], timeout=1) as ser:

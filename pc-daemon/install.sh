@@ -30,7 +30,7 @@ cp ./mapping.json /home/$USER/.config/Audio-Sensei-daemon/mapping.json
 cp ./config.toml /home/$USER/.config/Audio-Sensei-daemon/config.toml
 
 # copying config file
-cp ./config.toml /home/$USER/.config/SAC-daemon/config.toml
+cp ./config.toml /home/$USER/.config/Audio-Sensei-daemon/config.toml
 
 # copying systemd service unit
 cp ./Audio-Sensei-daemon.service /home/$USER/.config/systemd/user/Audio-Sensei-daemon.service
