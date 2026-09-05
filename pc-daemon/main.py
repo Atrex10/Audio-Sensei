@@ -37,26 +37,40 @@ def loadConfig(configPath: str) -> dict:
         return data
 
 
-def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str) -> None:
+def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str, max_retries: int=3) -> bool:
     response: dict = {
         "type": "ack",
         "id": msg_id,
-        "status": "OK",  # OK or ERROR
+        "status": status,  # OK or ERROR
         "command": "confExec",
         "value": cmd_response
     }
 
-    while True:
+    payload = (json.dumps(response) + "\n").encode("utf-8")
+
+    ser.write_timeout = 0  # fire-and-forget, non blocking serial write
+
+    for attempt in range(1, max_retries + 1):
         try:
-            payload = json.dumps(response) + "\n"
-            ser.write(payload.encode("utf-8"))
-            ser.flush()
+            if not ser.is_open:
+                raise serial.SerialException("Serial port is closed.")
+
+            ser.write(payload)
+            # ser.flush()
             logging.info(f"ACK sent [ID: {msg_id}] status: {status}")
-            break
-        except Exception as e:
-            logging.error(f"Sending ACK failed: {e}. Retrying in 1s...")
-            time.sleep(1)
-            continue
+            return True
+
+        except (serial.SerialException, Exception) as e:
+            logging.error(
+                f"Sending ACK failed (Attempt {attempt}/{max_retries}): {e}"
+            )
+            if attempt < max_retries:
+                time.sleep(1)
+
+    logging.critical(
+        f"Failed to send ACK [ID: {msg_id}] after {max_retries} attempts."
+    )
+    return False
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serial-Audio-Controller daemon")
