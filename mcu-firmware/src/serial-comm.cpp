@@ -20,15 +20,15 @@ void sendJson(uint8_t inputType, uint8_t inputId, uint8_t inputValue, unsigned i
     // set input json field
     switch (inputType)
     {
-    case 0:
+    case ENCODER:
         doc["input"] = "encoder";
         break;
     
-    case 1:
+    case BUTTON:
         doc["input"] = "button";
         break;
     
-    case 2:
+    case POTMR:
         doc["input"] = "potentiometer";
         break;
     

@@ -6,6 +6,8 @@
 #include <queue.h>
 #include <task.h>
 
+#include "serial-comm.h"
+
 #define QUEUE_SLOTS 10
 #define QUEUE_FULL_TIMEOUT_MS 10
 

@@ -7,6 +7,8 @@
 
 #include <ArduinoJson.h>
 
+#include "freertos-task.h"
+
 typedef enum {
     FREE,
     WAITING_FOR_ACK,
@@ -67,6 +69,11 @@ class AckController {
             }
 
             return true;
+        }
+
+        void reportAckSkip() {
+            // report the ack skip, will stop waiting for it
+            commStateBuffer.ackState = FREE;
         }
 
         CommState readCommState() {

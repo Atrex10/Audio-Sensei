@@ -3,11 +3,11 @@
 #include <Arduino.h>
 
 #include "mainHeader.h"
-#include "serial-comm.h"
 
 QueueHandle_t commandQueueHandle;
 TaskHandle_t processCommandHandle;
 
+AckController ackController;
 
 void sendCmd2Queue(InputType type, char id, char value, bool isr) {
     InputCommand newCmd;
@@ -40,8 +40,44 @@ void processCommandTask(void *pvParameters) {
             Serial.println("Received command");
             #endif
             
-            idCounter++;
-            sendJson(recvCmd.type, recvCmd.id, recvCmd.value, idCounter);
+            while (ackController.readCommState().ackState != FREE) {} // wait for the ackController to be free
+
+            idCounter++;  // increment the id counter
+
+            bool waitForData = recvCmd.type == READ;
+
+            ackController.reportCommand(idCounter, waitForData);  // if read command report with data request
+
+            sendJson(recvCmd.type, recvCmd.id, recvCmd.value, idCounter);  // send the json to the pc
+
+            // read ack
+            JsonDocument ackJson = waitAndReadAck();
+
+            // handle errors
+            if (ackJson["type"] == "timeout") {
+                Serial.println("Ack timed out, moving on");
+                ackController.reportAckSkip();
+            } else if (ackJson["type"] == "error") {
+                Serial.println("Ack parsing error, moving on");
+                ackController.reportAckSkip();
+            }
+
+            if (!ackController.reportAck(ackJson)) {
+                // if ack invalid, skip it anyways
+                #ifdef DEBUG
+                Serial.println("Received ack, it is invalid. Skipping");
+                #endif
+                ackController.reportAckSkip();
+            } else if (waitForData) {
+                #ifdef DEBUG
+                Serial.println("Received ack, interpretting the data");
+                #endif
+                // TODO: write data interpretation
+            } else {
+                #ifdef DEBUG
+                Serial.println("Received ack, nothing worth attention");
+                #endif
+            }
         }
     }
 }
