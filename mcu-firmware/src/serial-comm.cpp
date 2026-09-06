@@ -40,3 +40,43 @@ void sendJson(uint8_t inputType, uint8_t inputId, uint8_t inputValue, unsigned i
     // send the json through terminal
     serializeJson(doc, Serial);
 }
+
+JsonDocument waitAndReadAck(int timeoutMs) {
+    unsigned long startMillis = millis();
+
+    while (1) {
+        // check for timeout
+        if (millis() - startMillis >= timeoutMs) {
+            JsonDocument timeoutDoc;
+            timeoutDoc["type"] = "timeout";
+            return timeoutDoc;
+        };
+
+        if (Serial.available() > 0) {
+            // read serial until new line ('\n')
+            String ackString = Serial.readStringUntil('\n');
+
+            // trim and validate
+            ackString.trim();
+            if (ackString.length() == 0) {
+                Serial.println("Read empty ack");
+                continue;
+            }
+
+            JsonDocument ackDoc;
+
+            DeserializationError error = deserializeJson(ackDoc, ackString);
+
+            if (error) {
+                Serial.print(F("Błąd parsowania JSON: "));
+                Serial.println(error.f_str());
+
+                JsonDocument errorDoc;
+                errorDoc["type"] = "error";
+                return errorDoc;
+            }
+
+            return ackDoc;
+        }
+    }
+}

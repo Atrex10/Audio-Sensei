@@ -22,6 +22,8 @@ void beginSerial();
 
 void sendJson(uint8_t inputType, uint8_t inputId, uint8_t inputValue, unsigned int id);
 
+JsonDocument waitAndReadAck(int timeoutMs=3000);
+
 // TODO: write the class
 class AckController {
     private:
