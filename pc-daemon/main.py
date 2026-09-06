@@ -37,7 +37,7 @@ def loadConfig(configPath: str) -> dict:
         return data
 
 
-def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: str) -> None:
+def sendResponse(ser: serial.Serial, status: str, cmd_response: str, msg_id: int) -> None:
     response: dict = {
         "type": "ack",
         "id": msg_id,
@@ -110,7 +110,7 @@ def main() -> None:
                         cmd_input = data.get("input")
                         cmd_inputID = data.get("inputID")
                         cmd_value = data.get("value")
-                        msg_id: str = str(data.get("id", "0"))
+                        msg_id: int = data.get("id", "0")
 
                         logging.debug(f"Decoded JSON command:\ninput: {cmd_input}\ninput ID: {cmd_inputID}\nvalue: {cmd_value}\nmessage id: {msg_id}")
 

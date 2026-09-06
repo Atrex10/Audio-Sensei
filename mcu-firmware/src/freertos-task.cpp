@@ -9,7 +9,7 @@ TaskHandle_t processCommandHandle;
 
 AckController ackController;
 
-void sendCmd2Queue(InputType type, char id, char value, bool isr) {
+void sendCmd2Queue(InputType type, unsigned char id, char value, bool isr) {
     InputCommand newCmd;
 
     newCmd.type = type;

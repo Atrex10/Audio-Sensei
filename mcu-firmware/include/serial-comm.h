@@ -7,6 +7,7 @@
 
 #include <ArduinoJson.h>
 
+#include "mainHeader.h"
 #include "freertos-task.h"
 
 typedef enum {
@@ -17,7 +18,7 @@ typedef enum {
 
 typedef struct {
     AckState ackState;
-    char id;
+    unsigned char id;
 } CommState;
 
 void beginSerial();
@@ -34,7 +35,7 @@ class AckController {
         JsonDocument ackDataBuffer;
 
     public:
-        bool reportCommand(char id, bool waitForData=false) {
+        bool reportCommand(unsigned char id, bool waitForData=false) {
             // return false if comms already busy, true if report approved
             if (commStateBuffer.ackState != FREE) {
                 return false;
@@ -67,6 +68,8 @@ class AckController {
             } else {
                 ackDataBuffer = NULL;
             }
+
+            commStateBuffer.ackState = FREE;
 
             return true;
         }

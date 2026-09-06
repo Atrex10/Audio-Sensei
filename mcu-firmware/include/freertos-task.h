@@ -20,7 +20,7 @@ typedef enum {
 
 typedef struct {
     InputType type;
-    char id;
+    unsigned char id;
     char value;
 } InputCommand;
 
@@ -28,7 +28,7 @@ typedef struct {
 extern QueueHandle_t commandQueueHandle;
 extern TaskHandle_t processCommandHandle;
 
-void sendCmd2Queue(InputType type, char id, char value, bool isr=false);
+void sendCmd2Queue(InputType type, unsigned char id, char value, bool isr=false);
 
 void processCommandTask(void *pvParameters);
 
