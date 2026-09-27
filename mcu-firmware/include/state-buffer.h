@@ -7,6 +7,7 @@
 #include <queue.h>
 #include <task.h>
 #include <semphr.h>
+#include <ArduinoJson.h>
 
 #include "mainHeader.h"
 
@@ -42,9 +43,9 @@ class StateBuffer {
             return true;
         }
 
-        volatile PlaybackState readStateBuffer() {
+        PlaybackState readStateBuffer() {
             if (xSemaphoreTake(xStateBufferMutex, portMAX_DELAY) == pdTRUE) {
-                volatile PlaybackState state;
+                PlaybackState state;
 
                 // CRITICAL SECTION
                 memcpy((void*)&stateBuffer, (void*)&state, sizeof(PlaybackState));  // copy the buffer into state
@@ -52,11 +53,24 @@ class StateBuffer {
                 xSemaphoreGive(xStateBufferMutex);
                 // END OF CRITICAL SENCTION
 
+                return state;
+
             } else {
                 // create and return empty state if taking mutex failed
                 PlaybackState emptyState = {"", "", "", false};
                 return emptyState;
             }
+        }
+
+        bool writeStateBufferJson(JsonDocument json) {
+            PlaybackState newState;
+
+            newState.title = json["title"];
+            newState.artist = json["artist"];
+            newState.album = json["album"];
+            newState.state = json["state"];
+
+            return writeStateBuffer(newState);  // copy the status code from lower function
         }
 
     private:
