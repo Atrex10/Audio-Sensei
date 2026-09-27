@@ -64,7 +64,7 @@ bool checkInputActivity(int value) {
 }
 
 void updateInputs() {
-    uint8_t value;
+    int value;
 
     // check encoders
     for (int i=0; i<encoderCount; i++) {

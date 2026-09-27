@@ -23,7 +23,7 @@ typedef struct {
 
 void beginSerial();
 
-void sendJson(uint8_t inputType, uint8_t inputId, uint8_t inputValue, unsigned int id);
+void sendJson(uint8_t inputType, uint8_t inputId, int8_t inputValue, unsigned int id);
 
 JsonDocument waitAndReadAck(int timeoutMs=3000);
 
