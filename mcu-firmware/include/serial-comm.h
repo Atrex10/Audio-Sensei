@@ -81,6 +81,10 @@ class AckController {
         CommState readCommState() {
             return commStateBuffer;
         }
+
+        JsonDocument readAckData() {
+            return ackDataBuffer;
+        }
 };
 
 

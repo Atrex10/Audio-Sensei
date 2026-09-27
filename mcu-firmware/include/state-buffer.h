@@ -12,9 +12,9 @@
 #include "mainHeader.h"
 
 typedef struct {
-    char* title;
-    char* artist;
-    char* album;
+    String title;
+    String artist;
+    String album;
     bool state;
 } PlaybackState;
 
@@ -65,10 +65,10 @@ class StateBuffer {
         bool writeStateBufferJson(JsonDocument json) {
             PlaybackState newState;
 
-            newState.title = json["title"];
-            newState.artist = json["artist"];
-            newState.album = json["album"];
-            newState.state = json["state"];
+            newState.title = json["title"].as<String>();
+            newState.artist = json["artist"].as<String>();
+            newState.album = json["album"].as<String>();
+            newState.state = json["state"].as<String>();
 
             return writeStateBuffer(newState);  // copy the status code from lower function
         }

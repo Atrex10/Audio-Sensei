@@ -30,9 +30,7 @@ void sendCmd2Queue(InputType type, unsigned char id, char value, bool isr) {
 void processCommandTask(void *pvParameters) {
     InputCommand recvCmd;
 
-    #ifdef DEBUG
     Serial.println("Freertos task started");
-    #endif
 
     while(1) {
         if (xQueueReceive(commandQueueHandle, &recvCmd, portMAX_DELAY) == pdPASS) {
@@ -72,7 +70,14 @@ void processCommandTask(void *pvParameters) {
                 #ifdef DEBUG
                 Serial.println("Received ack, interpretting the data");
                 #endif
-                // TODO: write data interpretation
+                
+                // write the data to state buffer
+                if (!stateBuffer.writeStateBufferJson(ackController.readAckData())) {
+                    #ifdef DEBUG
+                    Serial.println("Failed to write json to state buffer");
+                    #endif
+                }
+
             } else {
                 #ifdef DEBUG
                 Serial.println("Received ack, nothing worth attention");

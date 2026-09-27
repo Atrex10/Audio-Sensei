@@ -68,7 +68,7 @@ JsonDocument waitAndReadAck(int timeoutMs) {
             DeserializationError error = deserializeJson(ackDoc, ackString);
 
             if (error) {
-                Serial.print(F("Błąd parsowania JSON: "));
+                Serial.print("JSON parsing error: ");
                 Serial.println(error.f_str());
 
                 JsonDocument errorDoc;

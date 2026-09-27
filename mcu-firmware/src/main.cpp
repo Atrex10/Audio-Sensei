@@ -5,13 +5,14 @@
 #include "inputs.h"
 #include "freertos-task.h"
 #include "serial-comm.h"
+#include "state-buffer.h"
 
 // variables
 // INPUTS DEFINITIONS
 
 // For each input device, set <device>Count variable to number of devices you have.
 // Then in the array below remove/add instances to match number of devices.
-// Last adjust the pins to which the devices are connectet.
+// Lastly adjust the pins to which the devices are connected.
 // Notice: the order of device definitions matters, this is how they are going to
 // identify to the daemon on the pc (first defined will have id 0, second id 1 and so on)
 
@@ -53,6 +54,10 @@ unsigned int idCounter = 0;
 Ticker updateInputsTicker;
 
 
+// state buffer
+StateBuffer stateBuffer;
+
+
 // FUNCTIONS
 bool checkInputActivity(int value) {
     return value != 0;
@@ -91,6 +96,9 @@ void updateInputs() {
 void setup() {
     // serial setup
     beginSerial();
+
+    // state buffer setup
+    stateBuffer.begin();
 
     // inputs setup
     for (int i=0; i<encoderCount; i++) {
