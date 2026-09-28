@@ -68,13 +68,25 @@ void updateInputs() {
 
     // check encoders
     for (int i=0; i<encoderCount; i++) {
-        value = encoders[i].readAndReset();
-        if (checkInputActivity(value)) {
-            sendCmd2Queue(ENCODER, i, value, true);
+        if (!encoders[i].inputGrouperTimerExpired()) {
+            value = encoders[i].read();
 
-            #ifdef DEBUG
-            Serial.println("Detected encoder turn");
-            #endif
+            if (checkInputActivity(value)) {
+                #ifdef DEBUG
+                Serial.println("Detected encoder turn");
+                #endif
+                encoders[i].startInputGrouperTimer();  // start the input group
+            }
+        } else {
+            // time to send the group
+            value = encoders[i].readAndReset();
+            // if (checkInputActivity(value)) {
+                sendCmd2Queue(ENCODER, i, value, true);
+    
+                #ifdef DEBUG
+                Serial.println("Encoder group sent to queue");
+                #endif
+            // }
         }
     }
 

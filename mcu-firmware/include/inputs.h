@@ -86,8 +86,30 @@ class Encoder {
             return turns;
         }
 
+        bool inputGrouperTimerExpired() {  //  note: resets timerRedeemed flag
+            if (timerRedeemed) {return false;}
+            if (!timerRedeemed && (millis() - groupingStartMillis >= inputGroupingMs)) {
+                timerRedeemed = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        void startInputGrouperTimer() {
+            if (timerRedeemed) {
+                groupingStartMillis = millis();
+                timerRedeemed = false;
+            }
+        }
+
     
     private:
+        const int inputGroupingMs = 300;
+        volatile unsigned long groupingStartMillis = 0;
+
+        volatile bool timerRedeemed = true;
+
         static void isrWrapper(void* arg) {
             Encoder* encoderInstance = static_cast<Encoder*>(arg);
             encoderInstance->interruptCallback();
