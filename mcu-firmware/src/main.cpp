@@ -6,6 +6,7 @@
 #include "freertos-task.h"
 #include "serial-comm.h"
 #include "state-buffer.h"
+#include "outputs.h"
 
 // variables
 // INPUTS DEFINITIONS
@@ -53,6 +54,7 @@ unsigned int idCounter = 0;
 // OBJECTS
 Ticker updateInputsTicker;
 
+UserInterface userInterface(lcd);  // user interface object
 
 // state buffer
 StateBuffer stateBuffer;
@@ -124,6 +126,15 @@ void setup() {
     // task and queue setup
     setupTask();
     setupQueue();
+
+    // user interface setup
+    // userInterface.begin();
+    // userInterface.displayPlayingAnimation();
+    // userInterface.displayText("In the end", 0, 0);
+    // userInterface.displayText("Linkin Park", 0, 1);
+
+    lcd.init();
+    lcd.print("hgwishgiu");
 
     // tickers configuration
     updateInputsTicker.attach_ms(updateInputsInterval, updateInputs);

@@ -38,9 +38,16 @@ public:
     }
 
     void begin() {
+        // wire begin
+        Wire.setSDA(16);
+        Wire.setSCL(17);
+        Wire.begin();
+
         lcd.init();
         lcd.clear();
         lcd.noBacklight();
+
+        loadPlayingFrameChars(0);
     }
 
     void displayPlayingAnimation(int x=14, int y=0) {
