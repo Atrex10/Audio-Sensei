@@ -2,9 +2,6 @@
 
 #include <LiquidCrystal_I2C.h>
 
-// lcd object definition
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-
 // animation frames custom chars definitions
 const uint8_t playingAnimationFrames[4][4][8] = {
 // frame 0

@@ -54,7 +54,9 @@ unsigned int idCounter = 0;
 // OBJECTS
 Ticker updateInputsTicker;
 
-UserInterface userInterface(lcd);  // user interface object
+// lcd object definition
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+UserInterface userInterface(&lcd);  // user interface object
 
 // state buffer
 StateBuffer stateBuffer;
@@ -108,8 +110,11 @@ void updateInputs() {
 
 // SETUP & LOOP
 void setup() {
-    // serial setup
-    beginSerial();
+    // user interface setup
+    userInterface.begin();
+    userInterface.displayPlayingAnimation();
+    userInterface.displayText("In the end", 0, 14);
+    userInterface.displayText("Linkin Park", 1, 14);
 
     // state buffer setup
     stateBuffer.begin();
@@ -123,18 +128,12 @@ void setup() {
         buttons[i].begin();
     }
 
+    // serial setup
+    beginSerial();
+
     // task and queue setup
     setupTask();
     setupQueue();
-
-    // user interface setup
-    // userInterface.begin();
-    // userInterface.displayPlayingAnimation();
-    // userInterface.displayText("In the end", 0, 0);
-    // userInterface.displayText("Linkin Park", 0, 1);
-
-    lcd.init();
-    lcd.print("hgwishgiu");
 
     // tickers configuration
     updateInputsTicker.attach_ms(updateInputsInterval, updateInputs);
