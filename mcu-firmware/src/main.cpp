@@ -49,10 +49,23 @@ Button buttons[buttonCount] = {
 // VARIABLES
 const int updateInputsInterval = 100;  // ms
 
+const int updateOutputsInterval = 200;  // ms, how often the outputs loop executes, set to lowest from below
+// the cycles refer to how many times the above interval
+// will trigger before the given function executes
+// 200ms interval & 20 cycles executes every 4000ms
+const int updateOutputsStateBufferCycles = 20;
+const int renderOutputsLcdCycles = 20;  //  no need to be faster than state buffer update (above)
+const int incrementOutputsAnimationCycles = 1;
+
+uint32_t updateOutputsCycleCounter = 0;
+
+
 unsigned int idCounter = 0;
 
 // OBJECTS
 Ticker updateInputsTicker;
+
+Ticker updateOutputsTicker;
 
 // lcd object definition
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -84,13 +97,11 @@ void updateInputs() {
         } else {
             // time to send the group
             value = encoders[i].readAndReset();
-            // if (checkInputActivity(value)) {
-                sendCmd2Queue(ENCODER, i, value, true);
-    
-                #ifdef DEBUG
-                Serial.println("Encoder group sent to queue");
-                #endif
-            // }
+            sendCmd2Queue(ENCODER, i, value, true);
+
+            #ifdef DEBUG
+            Serial.println("Encoder group sent to queue");
+            #endif
         }
     }
 
@@ -107,6 +118,19 @@ void updateInputs() {
     }
 }
 
+void updateOutputs() {
+    if (updateOutputsCycleCounter % updateOutputsStateBufferCycles == 0) {
+        ;
+    }
+    if (updateOutputsCycleCounter % renderOutputsLcdCycles == 0) {
+        ;
+    }
+    if (updateOutputsCycleCounter % incrementOutputsAnimationCycles == 0) {
+        userInterface.incrementPlayingAnimation();
+    }
+
+    updateOutputsCycleCounter++;
+}
 
 // SETUP & LOOP
 void setup() {
@@ -129,8 +153,7 @@ void setup() {
         buttons[i].begin();
     }
 
-    // serial setup
-    beginSerial();
+    pinMode(25, OUTPUT);
 
     // task and queue setup
     setupTask();
@@ -138,6 +161,10 @@ void setup() {
 
     // tickers configuration
     updateInputsTicker.attach_ms(updateInputsInterval, updateInputs);
+    updateOutputsTicker.attach_ms(updateOutputsInterval, updateOutputs);
+
+    // serial setup
+    beginSerial();
 }
 
 void loop() {
