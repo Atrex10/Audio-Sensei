@@ -15,6 +15,8 @@ class UserInterface{
 private:
     LiquidCrystal_I2C* lcd;
 
+    uint8_t currentPlayingAnimationFrame = 0;
+
     void loadPlayingFrameChars(int frameNum) {
         lcd->createChar(0, const_cast<uint8_t*>(playingAnimationFrames[frameNum][0]));
         lcd->createChar(1, const_cast<uint8_t*>(playingAnimationFrames[frameNum][1]));
@@ -48,7 +50,12 @@ public:
         lcd->setCursor(0, 0);
         lcd->backlight();
 
-        loadPlayingFrameChars(0);
+        loadPlayingFrameChars(currentPlayingAnimationFrame);
+    }
+
+    void displayText(String text, int row, int maxChars = 16) {
+        lcd->setCursor(0, row);
+        lcd->print(trimString(text, maxChars));
     }
 
     void displayPlayingAnimation(int x=14, int y=0) {
@@ -62,9 +69,12 @@ public:
         lcd->write(3);
     }
 
-    void displayText(String text, int row, int maxChars = 16) {
-        lcd->setCursor(0, row);
-        lcd->print(trimString(text, maxChars));
+    void incrementPlayingAnimation() {
+        currentPlayingAnimationFrame++;
+        if (currentPlayingAnimationFrame > 3) {
+            currentPlayingAnimationFrame = 0; }  // reset the counter
+
+        loadPlayingFrameChars(currentPlayingAnimationFrame);
     }
 
     void clearDisplay() {

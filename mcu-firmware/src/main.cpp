@@ -112,9 +112,10 @@ void updateInputs() {
 void setup() {
     // user interface setup
     userInterface.begin();
+    // display the starting layout
     userInterface.displayPlayingAnimation();
-    userInterface.displayText("In the end", 0, 14);
-    userInterface.displayText("Linkin Park", 1, 14);
+    userInterface.displayText("---", 0, 14);
+    userInterface.displayText("---", 1, 14);
 
     // state buffer setup
     stateBuffer.begin();
