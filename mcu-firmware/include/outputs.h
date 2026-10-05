@@ -7,9 +7,11 @@
 #define CLEARING_SPACES "                    "
 #define MAX_CLEARING_SPACES 20
 
+#define ANIMATION_TOTAL_FRAMES 4
+
 extern LiquidCrystal_I2C lcd;
 
-extern const uint8_t playingAnimationFrames[4][4][8];
+extern const uint8_t playingAnimationFrames[2][4][8];
 
 class UserInterface{
 private:
@@ -17,11 +19,53 @@ private:
 
     uint8_t currentPlayingAnimationFrame = 0;
 
-    void loadPlayingFrameChars(int frameNum) {
-        lcd->createChar(0, const_cast<uint8_t*>(playingAnimationFrames[frameNum][0]));
-        lcd->createChar(1, const_cast<uint8_t*>(playingAnimationFrames[frameNum][1]));
-        lcd->createChar(2, const_cast<uint8_t*>(playingAnimationFrames[frameNum][2]));
-        lcd->createChar(3, const_cast<uint8_t*>(playingAnimationFrames[frameNum][3]));
+    int animationX = 14;
+    int animationY = 0;
+
+    void loadPlayingFrameChars() {
+        // load regular vinyl quarters
+        lcd->createChar(0, const_cast<uint8_t*>(playingAnimationFrames[0][0]));
+        lcd->createChar(1, const_cast<uint8_t*>(playingAnimationFrames[0][1]));
+        lcd->createChar(2, const_cast<uint8_t*>(playingAnimationFrames[0][2]));
+        lcd->createChar(3, const_cast<uint8_t*>(playingAnimationFrames[0][3]));
+        // load marked vinyl quarters
+        lcd->createChar(4, const_cast<uint8_t*>(playingAnimationFrames[0][4]));
+        lcd->createChar(5, const_cast<uint8_t*>(playingAnimationFrames[0][5]));
+        lcd->createChar(6, const_cast<uint8_t*>(playingAnimationFrames[0][6]));
+        lcd->createChar(7, const_cast<uint8_t*>(playingAnimationFrames[0][7]));
+
+        lcd->home();
+    }
+
+    void displayPlayingAnimationFrame(int x, int y, int frameNum) {
+        // this function defines how animation frames look
+        // it does not have any strict structure, all it has to do 
+        // is display the given frame 
+
+        // ANIMATION SPECIFIC CODE
+        if (frameNum == 1 || frameNum == 3) {
+            lcd->setCursor(x, y);
+            lcd->write(0);
+            lcd->write(1);
+            lcd->setCursor(x, y+1);
+            lcd->write(2);
+            lcd->write(3);
+        } else if (frameNum == 0) {
+            lcd->setCursor(x, y);
+            lcd->write(4);
+            lcd->write(1);
+            lcd->setCursor(x, y+1);
+            lcd->write(2);
+            lcd->write(7);
+        } else {
+            lcd->setCursor(x, y);
+            lcd->write(0);
+            lcd->write(5);
+            lcd->setCursor(x, y+1);
+            lcd->write(6);
+            lcd->write(3);
+        }
+        // ANIMATION SPECIFIC CODE
     }
 
     String trimString(const String& str, size_t maxLength) {
@@ -50,7 +94,7 @@ public:
         lcd->setCursor(0, 0);
         lcd->backlight();
 
-        loadPlayingFrameChars(currentPlayingAnimationFrame);
+        loadPlayingFrameChars();
     }
 
     void displayText(String text, int row, int maxChars = 16) {
@@ -59,22 +103,17 @@ public:
     }
 
     void displayPlayingAnimation(int x=14, int y=0) {
-        lcd->setCursor(x, y);
-        lcd->write(0);
-        lcd->setCursor(x+1, y);
-        lcd->write(1);
-        lcd->setCursor(x, y+1);
-        lcd->write(2);
-        lcd->setCursor(x+1, y+1);
-        lcd->write(3);
+        displayPlayingAnimationFrame(x, y, currentPlayingAnimationFrame);
+        animationX = x;
+        animationY = y;
     }
 
     void incrementPlayingAnimation() {
         currentPlayingAnimationFrame++;
-        if (currentPlayingAnimationFrame > 3) {
+        if (currentPlayingAnimationFrame > ANIMATION_TOTAL_FRAMES - 1) {
             currentPlayingAnimationFrame = 0; }  // reset the counter
 
-        loadPlayingFrameChars(currentPlayingAnimationFrame);
+        displayPlayingAnimationFrame(animationX, animationY, currentPlayingAnimationFrame);
     }
 
     void clearDisplay() {

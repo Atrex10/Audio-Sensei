@@ -126,7 +126,7 @@ void updateOutputs() {
         ;
     }
     if (updateOutputsCycleCounter % incrementOutputsAnimationCycles == 0) {
-        userInterface.incrementPlayingAnimation();
+        ;
     }
 
     updateOutputsCycleCounter++;
