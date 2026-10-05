@@ -18,66 +18,12 @@ extern LiquidCrystal_I2C lcd;
 
 extern const uint8_t playingAnimationFrames[2][4][8];
 
-class LcdFreeRTOSTask {
-private:
-    TaskHandle_t lcdTaskHandle;
 
-    void lcdTaskRun(void *pvParameters) {
-        uint32_t ulNotifiedValue;
-
-        while (1) {
-            if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &ulNotifiedValue, portMAX_DELAY) == pdTRUE) {
-                if (ulNotifiedValue & UPDATE_LCD_ANIMATION_BYTE) {
-                    // TODO: write lcd animation update
-                    Serial.println("aohoi");
-                }
-
-                if (ulNotifiedValue & UPDATE_LCD_TEXT_BYTE) {
-                    // TODO: write lcd text update
-                    Serial.println("agag");
-                }
-            }
-        }
-    }
-
-    static void lcdTaskWrapper(void* pvParameters) {
-        LcdFreeRTOSTask* instance = static_cast<LcdFreeRTOSTask*>(pvParameters);
-
-        instance->lcdTaskRun(pvParameters);
-    }
-
-public:
-    void begin() {
-        xTaskCreate (
-        lcdTaskWrapper,         // funciton realizing the task
-        "LCD_control_task",     // text task name
-        2048,                   // stack size (bytes)
-        NULL,                   // args for task
-        2,                      // task priority (higher is more important)
-        &lcdTaskHandle          // task handle
-        );
-    }
-
-    void triggerActionFromIsr(uint8_t actionByte) {
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        if (lcdTaskHandle != NULL) {
-            // Ustaw bit zdarzenia A bez nadpisywania pozostałych bitów
-            xTaskNotifyFromISR(lcdTaskHandle, actionByte, eSetBits, &xHigherPriorityTaskWoken);
-            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-        }
-    }
-
-
-};
-
-
-class UserInterface{
+class LcdUserInterface{
 private:
     LiquidCrystal_I2C* lcd;
 
-    uint8_t currentPlayingAnimationFrame = 0;
-    
-    LcdFreeRTOSTask lcdTask;
+    volatile uint8_t currentPlayingAnimationFrame = 0;
 
     int animationX = 14;
     int animationY = 0;
@@ -139,11 +85,9 @@ private:
     }
 
 public:
-    UserInterface(LiquidCrystal_I2C* lcdInstance) : lcd(lcdInstance) {
+    void begin(LiquidCrystal_I2C* lcdInstance) {
         lcd = lcdInstance;
-    }
 
-    void begin() {
         // wire begin
         Wire.setSDA(16);
         Wire.setSCL(17);
@@ -152,12 +96,18 @@ public:
         lcd->init();
         lcd->clear();
         lcd->setCursor(0, 0);
-        lcd->backlight();
+        lcd->noBacklight();
 
         loadPlayingFrameChars();
+    }
 
-        // start the freertos task
-        lcdTask.begin();
+    void displayStandBy() {
+        lcd->clear();
+        displayPlayingAnimation();
+        lcd->setCursor(0, 0);
+        lcd->print("---");
+        lcd->setCursor(0, 1);
+        lcd->print("---");
     }
 
     void displayText(String text, int row, int maxChars = 16) {
@@ -175,8 +125,6 @@ public:
         currentPlayingAnimationFrame++;
         if (currentPlayingAnimationFrame > ANIMATION_TOTAL_FRAMES - 1) {
             currentPlayingAnimationFrame = 0; }  // reset the counter
-
-        lcdTask.triggerActionFromIsr(UPDATE_LCD_ANIMATION_BYTE);
     }
 
     void clearDisplay() {
@@ -192,6 +140,82 @@ public:
             lcd->setCursor(x, i);
             lcd->print(CLEARING_SPACES[MAX_CLEARING_SPACES - dx]);  // read only desired amount from the end
         }
+    }
+};
+
+class UserInterface {
+private:
+    // objects
+    LiquidCrystal_I2C* lcd;
+
+    LcdUserInterface lcdUI;
+
+    TaskHandle_t lcdTaskHandle;
+
+
+    // FreeRTOS task functions
+    void lcdTaskRun(void *pvParameters) {
+        uint32_t ulNotifiedValue;
+
+        while (1) {
+            if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &ulNotifiedValue, portMAX_DELAY) == pdTRUE) {
+                if (ulNotifiedValue & UPDATE_LCD_ANIMATION_BYTE) {
+                    // ANIMATION UPDATE
+                    // TODO: write lcd animation update
+                    Serial.println("aohoi");
+                }
+
+                if (ulNotifiedValue & UPDATE_LCD_TEXT_BYTE) {
+                    // TEXT UPDATE
+                    // TODO: write lcd text update
+                    Serial.println("agag");
+                }
+            }
+        }
+    }
+
+    static void lcdTaskWrapper(void* pvParameters) {
+        UserInterface* instance = static_cast<UserInterface*>(pvParameters);
+
+        instance->lcdTaskRun(pvParameters);
+    }
+
+    void triggerActionFromIsr(uint8_t actionByte) {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        if (lcdTaskHandle != NULL) {
+            // Ustaw bit zdarzenia A bez nadpisywania pozostałych bitów
+            xTaskNotifyFromISR(lcdTaskHandle, actionByte, eSetBits, &xHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+    }
+
+public:
+    UserInterface (LiquidCrystal_I2C* lcdInstance) : lcd(lcdInstance) {
+        lcd = lcdInstance;
+    }
+
+    void begin() {
+        // begin the lcd UI
+        lcdUI.begin(lcd);
+
+        // create freertos task
+        xTaskCreate (
+        lcdTaskWrapper,         // funciton realizing the task
+        "LCD_control_task",     // text task name
+        2048,                   // stack size (bytes)
+        NULL,                   // args for task
+        2,                      // task priority (higher is more important)
+        &lcdTaskHandle          // task handle
+        );
+    }
+
+    void updateAnimation() {
+        lcdUI.incrementPlayingAnimation();
+        triggerActionFromIsr(UPDATE_LCD_ANIMATION_BYTE);
+    }
+
+    void updateText() {
+        triggerActionFromIsr(UPDATE_LCD_TEXT_BYTE);
     }
 };
 

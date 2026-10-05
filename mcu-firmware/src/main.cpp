@@ -123,10 +123,10 @@ void updateOutputs() {
         ;
     }
     if (updateOutputsCycleCounter % renderOutputsLcdCycles == 0) {
-        ;
+        userInterface.updateText();
     }
     if (updateOutputsCycleCounter % incrementOutputsAnimationCycles == 0) {
-        userInterface.incrementPlayingAnimation();
+        userInterface.updateAnimation();
     }
 
     updateOutputsCycleCounter++;
@@ -136,10 +136,6 @@ void updateOutputs() {
 void setup() {
     // user interface setup
     userInterface.begin();
-    // display the starting layout
-    userInterface.displayPlayingAnimation();
-    userInterface.displayText("---", 0, 14);
-    userInterface.displayText("---", 1, 14);
 
     // state buffer setup
     stateBuffer.begin();
