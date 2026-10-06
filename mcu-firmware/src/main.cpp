@@ -49,12 +49,12 @@ Button buttons[buttonCount] = {
 // VARIABLES
 const int updateInputsInterval = 100;  // ms
 
-const int updateOutputsInterval = 200;  // ms, how often the outputs loop executes, set to lowest from below
+const int updateOutputsInterval = 400;  // ms, how often the outputs loop executes, set to lowest from below
 // the cycles refer to how many times the above interval
 // will trigger before the given function executes
 // 200ms interval & 20 cycles executes every 4000ms
-const int updateOutputsStateBufferCycles = 20;
-const int renderOutputsLcdCycles = 20;  //  no need to be faster than state buffer update (above)
+const int updateOutputsStateBufferCycles = 10;
+const int renderOutputsLcdCycles = 10;  //  no need to be faster than state buffer update (above)
 const int incrementOutputsAnimationCycles = 1;
 
 uint32_t updateOutputsCycleCounter = 0;
@@ -66,7 +66,6 @@ unsigned int idCounter = 0;
 Ticker updateInputsTicker;
 
 Ticker updateOutputsTicker;
-
 // lcd object definition
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 UserInterface userInterface(&lcd);  // user interface object
@@ -123,7 +122,7 @@ void updateOutputs() {
         ;
     }
     if (updateOutputsCycleCounter % renderOutputsLcdCycles == 0) {
-        userInterface.updateText();
+        // userInterface.updateText();
     }
     if (updateOutputsCycleCounter % incrementOutputsAnimationCycles == 0) {
         userInterface.updateAnimation();
@@ -148,8 +147,6 @@ void setup() {
     for (int i=0; i<buttonCount; i++) {
         buttons[i].begin();
     }
-
-    pinMode(25, OUTPUT);
 
     // task and queue setup
     setupTask();

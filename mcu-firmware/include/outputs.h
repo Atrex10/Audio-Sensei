@@ -25,9 +25,6 @@ private:
 
     volatile uint8_t currentPlayingAnimationFrame = 0;
 
-    int animationX = 14;
-    int animationY = 0;
-
     void loadPlayingFrameChars() {
         // load regular vinyl quarters
         lcd->createChar(0, const_cast<uint8_t*>(playingAnimationFrames[0][0]));
@@ -35,10 +32,10 @@ private:
         lcd->createChar(2, const_cast<uint8_t*>(playingAnimationFrames[0][2]));
         lcd->createChar(3, const_cast<uint8_t*>(playingAnimationFrames[0][3]));
         // load marked vinyl quarters
-        lcd->createChar(4, const_cast<uint8_t*>(playingAnimationFrames[0][4]));
-        lcd->createChar(5, const_cast<uint8_t*>(playingAnimationFrames[0][5]));
-        lcd->createChar(6, const_cast<uint8_t*>(playingAnimationFrames[0][6]));
-        lcd->createChar(7, const_cast<uint8_t*>(playingAnimationFrames[0][7]));
+        lcd->createChar(4, const_cast<uint8_t*>(playingAnimationFrames[1][0]));
+        lcd->createChar(5, const_cast<uint8_t*>(playingAnimationFrames[1][1]));
+        lcd->createChar(6, const_cast<uint8_t*>(playingAnimationFrames[1][2]));
+        lcd->createChar(7, const_cast<uint8_t*>(playingAnimationFrames[1][3]));
 
         lcd->home();
     }
@@ -49,28 +46,35 @@ private:
         // is display the given frame 
 
         // ANIMATION SPECIFIC CODE
-        if (frameNum == 1 || frameNum == 3) {
-            lcd->setCursor(x, y);
-            lcd->write(0);
-            lcd->write(1);
-            lcd->setCursor(x, y+1);
-            lcd->write(2);
-            lcd->write(3);
-        } else if (frameNum == 0) {
+        lcd->setCursor(x, y);
+        lcd->write(0);
+        lcd->write(1);
+        lcd->setCursor(x, y+1);
+        lcd->write(2);
+        lcd->write(3);
+
+        switch (frameNum) {
+        case 0:
             lcd->setCursor(x, y);
             lcd->write(4);
-            lcd->write(1);
-            lcd->setCursor(x, y+1);
-            lcd->write(2);
-            lcd->write(7);
-        } else {
-            lcd->setCursor(x, y);
-            lcd->write(0);
+            break;
+        
+        case 1:
+            lcd->setCursor(x+1, y);
             lcd->write(5);
+            break;
+
+        case 3:
             lcd->setCursor(x, y+1);
             lcd->write(6);
-            lcd->write(3);
-        }
+            break;
+        
+        case 2:
+            lcd->setCursor(x+1, y+1);
+            lcd->write(7);
+            break;
+        
+        default: break;}
         // ANIMATION SPECIFIC CODE
     }
 
@@ -117,8 +121,6 @@ public:
 
     void displayPlayingAnimation(int x=14, int y=0) {
         displayPlayingAnimationFrame(x, y, currentPlayingAnimationFrame);
-        animationX = x;
-        animationY = y;
     }
 
     void incrementPlayingAnimation() {
@@ -136,10 +138,14 @@ public:
             dx = MAX_CLEARING_SPACES;
         }
 
-        for (int i=0; i<y; i++) {
+        for (int i=y; i<y+dy; i++) {
             lcd->setCursor(x, i);
-            lcd->print(CLEARING_SPACES[MAX_CLEARING_SPACES - dx]);  // read only desired amount from the end
+            lcd->print(CLEARING_SPACES + (MAX_CLEARING_SPACES - dx));  // read only desired amount from the end
         }
+    }
+
+    void setBacklight(bool state) {
+        lcd->setBacklight(state);
     }
 };
 
@@ -150,7 +156,7 @@ private:
 
     LcdUserInterface lcdUI;
 
-    TaskHandle_t lcdTaskHandle;
+    TaskHandle_t lcdTaskHandle = NULL;
 
 
     // FreeRTOS task functions
@@ -161,14 +167,12 @@ private:
             if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &ulNotifiedValue, portMAX_DELAY) == pdTRUE) {
                 if (ulNotifiedValue & UPDATE_LCD_ANIMATION_BYTE) {
                     // ANIMATION UPDATE
-                    // TODO: write lcd animation update
-                    Serial.println("aohoi");
+                    lcdUI.displayPlayingAnimation();
                 }
 
                 if (ulNotifiedValue & UPDATE_LCD_TEXT_BYTE) {
                     // TEXT UPDATE
                     // TODO: write lcd text update
-                    Serial.println("agag");
                 }
             }
         }
@@ -183,7 +187,6 @@ private:
     void triggerActionFromIsr(uint8_t actionByte) {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         if (lcdTaskHandle != NULL) {
-            // Ustaw bit zdarzenia A bez nadpisywania pozostałych bitów
             xTaskNotifyFromISR(lcdTaskHandle, actionByte, eSetBits, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
@@ -197,14 +200,15 @@ public:
     void begin() {
         // begin the lcd UI
         lcdUI.begin(lcd);
+        lcdUI.displayStandBy();
 
         // create freertos task
         xTaskCreate (
         lcdTaskWrapper,         // funciton realizing the task
         "LCD_control_task",     // text task name
         2048,                   // stack size (bytes)
-        NULL,                   // args for task
-        2,                      // task priority (higher is more important)
+        this,                   // args for task
+        0,                      // task priority (higher is more important)
         &lcdTaskHandle          // task handle
         );
     }
