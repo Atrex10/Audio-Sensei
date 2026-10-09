@@ -6,6 +6,9 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
+#include "mainHeader.h"
+#include "state-buffer.h"
+
 #define CLEARING_SPACES "                    "
 #define MAX_CLEARING_SPACES 20
 
@@ -79,8 +82,8 @@ private:
     }
 
     String trimString(const String& str, size_t maxLength) {
-        if (maxLength == 0) {
-            return "";
+        if (maxLength == 0 || str.length() == 0) {
+            return "---";  // if empty string return a placeholder
         }
         if (str.length() > maxLength) {
             return str.substring(0, maxLength - 1) + "-";
@@ -172,7 +175,17 @@ private:
 
                 if (ulNotifiedValue & UPDATE_LCD_TEXT_BYTE) {
                     // TEXT UPDATE
-                    // TODO: write lcd text update
+                    // TODO: implement change sensing to avoid rerendering
+                    PlaybackState playbackStateBuffer = stateBuffer.readStateBuffer();  // read the data from global state buffer
+
+                    Serial.println(playbackStateBuffer.artist);
+
+                    // lcdUI.setBacklight(playbackStateBuffer.state);
+
+                    // lcdUI.clearDisplaySection(0, 0, 14, 2);  // clear everything except animation
+
+                    // lcdUI.displayText(playbackStateBuffer.title, 0, 14);
+                    // lcdUI.displayText(playbackStateBuffer.artist, 1, 14);
                 }
             }
         }

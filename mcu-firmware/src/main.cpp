@@ -49,7 +49,7 @@ Button buttons[buttonCount] = {
 // VARIABLES
 const int updateInputsInterval = 100;  // ms
 
-const int updateOutputsInterval = 400;  // ms, how often the outputs loop executes, set to lowest from below
+const int updateOutputsInterval = 500;  // ms, how often the outputs loop executes, set to lowest from below
 // the cycles refer to how many times the above interval
 // will trigger before the given function executes
 // 200ms interval & 20 cycles executes every 4000ms
@@ -66,6 +66,7 @@ unsigned int idCounter = 0;
 Ticker updateInputsTicker;
 
 Ticker updateOutputsTicker;
+
 // lcd object definition
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 UserInterface userInterface(&lcd);  // user interface object
@@ -122,7 +123,7 @@ void updateOutputs() {
         ;
     }
     if (updateOutputsCycleCounter % renderOutputsLcdCycles == 0) {
-        // userInterface.updateText();
+        userInterface.updateText();
     }
     if (updateOutputsCycleCounter % incrementOutputsAnimationCycles == 0) {
         userInterface.updateAnimation();
