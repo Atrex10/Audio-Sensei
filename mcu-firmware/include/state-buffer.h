@@ -12,12 +12,28 @@
 
 #define TEXT_FIELD_SIZE 24
 
-typedef struct {
+struct PlaybackState {
     String title = "";
     String artist = "";
     String album = "";
     bool state = false;
-} PlaybackState;
+
+    bool operator==(const PlaybackState& other) const {
+        if (title != other.title) return false;
+        if (artist != other.artist) return false;
+        if (album != other.album) return false;
+        if (state != other.state) return false;
+        return true;
+    }
+
+    bool operator!=(const PlaybackState& other) const {
+        if (title != other.title) return true;
+        if (artist != other.artist) return true;
+        if (album != other.album) return true;
+        if (state != other.state) return true;
+        return false;
+    }
+};
 
 class StateBuffer {
     public:

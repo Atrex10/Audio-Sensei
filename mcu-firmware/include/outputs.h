@@ -26,7 +26,7 @@ class LcdUserInterface{
 private:
     LiquidCrystal_I2C* lcd;
 
-    volatile uint8_t currentPlayingAnimationFrame = 0;
+    uint8_t currentPlayingAnimationFrame = 0;
 
     void loadPlayingFrameChars() {
         // load regular vinyl quarters
@@ -161,6 +161,7 @@ private:
 
     TaskHandle_t lcdTaskHandle = NULL;
 
+    PlaybackState previousState;
 
     // FreeRTOS task functions
     void lcdTaskRun(void *pvParameters) {
@@ -170,6 +171,10 @@ private:
             if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &ulNotifiedValue, portMAX_DELAY) == pdTRUE) {
                 if (ulNotifiedValue & UPDATE_LCD_ANIMATION_BYTE) {
                     // ANIMATION UPDATE
+                    PlaybackState playbackStateBuffer;
+                    stateBuffer.readBuffer(playbackStateBuffer);  // read the data from global state buffer
+
+                    if (playbackStateBuffer.state) lcdUI.incrementPlayingAnimation();  // only play the animation if active
                     lcdUI.displayPlayingAnimation();
                 }
 
@@ -179,12 +184,16 @@ private:
                     PlaybackState playbackStateBuffer;
                     stateBuffer.readBuffer(playbackStateBuffer);  // read the data from global state buffer
 
-                    lcdUI.setBacklight(playbackStateBuffer.state);
+                    if (playbackStateBuffer != previousState) {
+                        previousState = playbackStateBuffer;
 
-                    lcdUI.clearDisplaySection(0, 0, 14, 2);  // clear everything except animation
+                        lcdUI.setBacklight(playbackStateBuffer.state);
 
-                    lcdUI.displayText(playbackStateBuffer.title, 0, 14);
-                    lcdUI.displayText(playbackStateBuffer.artist, 1, 14);
+                        lcdUI.clearDisplaySection(0, 0, 14, 2);  // clear everything except animation
+
+                        lcdUI.displayText(playbackStateBuffer.title, 0, 14);
+                        lcdUI.displayText(playbackStateBuffer.artist, 1, 14);
+                    }
                 }
             }
         }
@@ -226,7 +235,6 @@ public:
     }
 
     void updateAnimation() {
-        lcdUI.incrementPlayingAnimation();
         triggerActionFromIsr(UPDATE_LCD_ANIMATION_BYTE);
     }
 
