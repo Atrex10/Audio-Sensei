@@ -89,7 +89,7 @@ class StateBuffer {
             newState.title = json["title"] | "";
             newState.artist = json["artist"] | "";
             newState.album = json["album"] | "";
-            newState.state = json["state"] | false;
+            newState.state = json["playing"] | false;
 
             return writeBuffer(newState);  // copy the status code from lower function
         }

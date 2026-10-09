@@ -80,6 +80,10 @@ bool checkInputActivity(int value) {
     return value != 0;
 }
 
+void sendReadCmd2Queue(bool isr = false) {
+    sendCmd2Queue(READ, 0, 0, isr);
+}
+
 void updateInputs() {
     int value;
 
@@ -120,7 +124,7 @@ void updateInputs() {
 
 void updateOutputs() {
     if (updateOutputsCycleCounter % updateOutputsStateBufferCycles == 0) {
-        ;
+        sendReadCmd2Queue(true);
     }
     if (updateOutputsCycleCounter % renderOutputsLcdCycles == 0) {
         userInterface.updateText();
