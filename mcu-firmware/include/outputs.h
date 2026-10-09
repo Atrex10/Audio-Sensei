@@ -176,16 +176,15 @@ private:
                 if (ulNotifiedValue & UPDATE_LCD_TEXT_BYTE) {
                     // TEXT UPDATE
                     // TODO: implement change sensing to avoid rerendering
-                    PlaybackState playbackStateBuffer = stateBuffer.readStateBuffer();  // read the data from global state buffer
+                    PlaybackState playbackStateBuffer;
+                    stateBuffer.readBuffer(playbackStateBuffer);  // read the data from global state buffer
 
-                    Serial.println(playbackStateBuffer.artist);
+                    lcdUI.setBacklight(playbackStateBuffer.state);
 
-                    // lcdUI.setBacklight(playbackStateBuffer.state);
+                    lcdUI.clearDisplaySection(0, 0, 14, 2);  // clear everything except animation
 
-                    // lcdUI.clearDisplaySection(0, 0, 14, 2);  // clear everything except animation
-
-                    // lcdUI.displayText(playbackStateBuffer.title, 0, 14);
-                    // lcdUI.displayText(playbackStateBuffer.artist, 1, 14);
+                    lcdUI.displayText(playbackStateBuffer.title, 0, 14);
+                    lcdUI.displayText(playbackStateBuffer.artist, 1, 14);
                 }
             }
         }
@@ -219,9 +218,9 @@ public:
         xTaskCreate (
         lcdTaskWrapper,         // funciton realizing the task
         "LCD_control_task",     // text task name
-        2048,                   // stack size (bytes)
+        2048,                   // stack size (words)
         this,                   // args for task
-        0,                      // task priority (higher is more important)
+        1,                      // task priority (higher is more important)
         &lcdTaskHandle          // task handle
         );
     }

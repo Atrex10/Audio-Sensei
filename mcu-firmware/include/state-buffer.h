@@ -21,19 +21,21 @@ typedef struct {
 
 class StateBuffer {
     public:
-        void begin() {
-            // create the mutex
-            xMutex = xSemaphoreCreateMutex();
-
-            #ifdef DEBUG
-            if (xMutex != NULL) {
-                Serial.println("State buffer mutex created succesfuly");}
-            #endif
+        StateBuffer() = default;
+ 
+        ~StateBuffer() {
+            if (xMutex) vSemaphoreDelete(xMutex);
         }
+        
+        StateBuffer(const StateBuffer&) = delete;
+        StateBuffer& operator=(const StateBuffer&) = delete;
+
+        bool begin() { return ensureMutex(); }
 
         bool writeBuffer(const PlaybackState& in, TickType_t timeout = portMAX_DELAY) {
             if (!xMutex) return false;
             if (xSemaphoreTake(xMutex, timeout) != pdTRUE) return false;
+
             // CRITICAL SECTION
             copyToRaw(rawBuf.title, in.title);
             copyToRaw(rawBuf.artist, in.artist);
@@ -41,19 +43,19 @@ class StateBuffer {
             rawBuf.state = in.state;
 
             // END OF CRITICAL SECITON
-            xSemaphoreGive(xMutex);
-            return true;
+            BaseType_t gave = xSemaphoreGive(xMutex);
+            return gave == pdTRUE;
         }
 
         bool readBuffer(PlaybackState& out, TickType_t timeout = portMAX_DELAY) {
             if (!xMutex) return false;
-
             RawPlaybackState snapshot;
-            if (!xSemaphoreTake(xMutex, timeout) != pdTRUE) return false;
+            if (xSemaphoreTake(xMutex, timeout) != pdTRUE) return false;
+            
             // CRITICAL SECTION
             snapshot = rawBuf;  // quick copy under the lock
             // END OF CRITICAL SECITON
-            xSemaphoreGive(xMutex);
+            BaseType_t gave = xSemaphoreGive(xMutex);
 
             // building the Strings
             out.title = snapshot.title;
@@ -61,7 +63,8 @@ class StateBuffer {
             out.album = snapshot.album;
             out.state = snapshot.state;
 
-            return true;
+            return gave == pdTRUE;
+
         }
 
         bool writeStateBufferJson(JsonDocument json) {
@@ -92,6 +95,11 @@ class StateBuffer {
             }
             memcpy(dst, src.c_str(), n);
             dst[n] = '\0';
+        }
+
+        bool ensureMutex() {
+            if (!xMutex) xMutex = xSemaphoreCreateMutex();
+            return xMutex != nullptr;
         }
 
         RawPlaybackState rawBuf;

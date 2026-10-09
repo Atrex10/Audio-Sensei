@@ -93,9 +93,9 @@ void setupTask() {
     xTaskCreate (
     processCommandTask,     // funciton realizing the task
     "Serial_data_task",     // text task name
-    8192,                   // stack size (bytes)
+    8192,                   // stack size (words)
     NULL,                   // args for task
-    1,                      // task priority (higher is more important)
+    2,                      // task priority (higher is more important)
     &processCommandHandle   // task handle
     );
 }

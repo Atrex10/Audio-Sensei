@@ -134,11 +134,11 @@ void updateOutputs() {
 
 // SETUP & LOOP
 void setup() {
-    // user interface setup
-    userInterface.begin();
-
     // state buffer setup
     stateBuffer.begin();
+
+    // user interface setup
+    userInterface.begin();
 
     // inputs setup
     for (int i=0; i<encoderCount; i++) {
