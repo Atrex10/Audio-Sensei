@@ -4,79 +4,99 @@
 #include <Arduino.h>
 
 #include <FreeRTOS.h>
-#include <queue.h>
 #include <task.h>
 #include <semphr.h>
 #include <ArduinoJson.h>
 
 #include "mainHeader.h"
 
+#define TEXT_FIELD_SIZE 24
+
 typedef struct {
-    String title;
-    String artist;
-    String album;
-    bool state;
+    String title = "";
+    String artist = "";
+    String album = "";
+    bool state = false;
 } PlaybackState;
 
 class StateBuffer {
     public:
         void begin() {
             // create the mutex
-            xStateBufferMutex = xSemaphoreCreateMutex();
+            xMutex = xSemaphoreCreateMutex();
 
             #ifdef DEBUG
-            if (xStateBufferMutex != NULL) {
+            if (xMutex != NULL) {
                 Serial.println("State buffer mutex created succesfuly");}
             #endif
         }
 
-        bool writeStateBuffer(PlaybackState state) {
-            if (xSemaphoreTake(xStateBufferMutex, portMAX_DELAY) == pdTRUE) {
-                // CRITICAL SECTION
-                memcpy((void*)&state, (void*)&stateBuffer, sizeof(PlaybackState));  // copy the new state into the buffer
+        bool writeBuffer(const PlaybackState& in, TickType_t timeout = portMAX_DELAY) {
+            if (!xMutex) return false;
+            if (xSemaphoreTake(xMutex, timeout) != pdTRUE) return false;
+            // CRITICAL SECTION
+            copyToRaw(rawBuf.title, in.title);
+            copyToRaw(rawBuf.artist, in.artist);
+            copyToRaw(rawBuf.album, in.album);
+            rawBuf.state = in.state;
 
-                xSemaphoreGive(xStateBufferMutex);
-                // END OF CRITICAL SENCTION
-            } else {
-                return false;
-            }
+            // END OF CRITICAL SECITON
+            xSemaphoreGive(xMutex);
             return true;
         }
 
-        PlaybackState readStateBuffer() {
-            if (xSemaphoreTake(xStateBufferMutex, portMAX_DELAY) == pdTRUE) {
-                PlaybackState state;
+        bool readBuffer(PlaybackState& out, TickType_t timeout = portMAX_DELAY) {
+            if (!xMutex) return false;
 
-                // CRITICAL SECTION
-                memcpy((void*)&stateBuffer, (void*)&state, sizeof(PlaybackState));  // copy the buffer into state
+            RawPlaybackState snapshot;
+            if (!xSemaphoreTake(xMutex, timeout) != pdTRUE) return false;
+            // CRITICAL SECTION
+            snapshot = rawBuf;  // quick copy under the lock
+            // END OF CRITICAL SECITON
+            xSemaphoreGive(xMutex);
 
-                xSemaphoreGive(xStateBufferMutex);
-                // END OF CRITICAL SENCTION
+            // building the Strings
+            out.title = snapshot.title;
+            out.artist = snapshot.artist;
+            out.album = snapshot.album;
+            out.state = snapshot.state;
 
-                return state;
-
-            } else {
-                // create and return empty state if taking mutex failed
-                PlaybackState emptyState = {"", "", "", false};
-                return emptyState;
-            }
+            return true;
         }
 
         bool writeStateBufferJson(JsonDocument json) {
             PlaybackState newState;
 
-            newState.title = json["title"].as<String>();
-            newState.artist = json["artist"].as<String>();
-            newState.album = json["album"].as<String>();
-            newState.state = json["state"].as<String>();
+            newState.title = json["title"] | "";
+            newState.artist = json["artist"] | "";
+            newState.album = json["album"] | "";
+            newState.state = json["state"] | false;
 
-            return writeStateBuffer(newState);  // copy the status code from lower function
+            return writeBuffer(newState);  // copy the status code from lower function
         }
 
     private:
-        volatile PlaybackState stateBuffer;
+        // create a struct with char arrays for safe data storage
+        struct RawPlaybackState {
+            char title[TEXT_FIELD_SIZE] = {};
+            char artist[TEXT_FIELD_SIZE] = {};
+            char album[TEXT_FIELD_SIZE] = {};
+            bool state = false;
+        };
 
-        SemaphoreHandle_t xStateBufferMutex = NULL;  // state buffer mutex handle
+        static void copyToRaw(char (&dst)[TEXT_FIELD_SIZE], const String& src) {
+            size_t n = src.length();
+            if (n >= TEXT_FIELD_SIZE) {
+                n = TEXT_FIELD_SIZE - 1;
+                while (n > 0 && (static_cast<unsigned char>(src[n]) & 0xC0) == 0x80) n--;
+            }
+            memcpy(dst, src.c_str(), n);
+            dst[n] = '\0';
+        }
+
+        RawPlaybackState rawBuf;
+
+        SemaphoreHandle_t xMutex = nullptr;  // state buffer mutex handle
 };
 
 #endif
