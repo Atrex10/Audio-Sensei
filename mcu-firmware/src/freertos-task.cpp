@@ -30,7 +30,9 @@ void sendCmd2Queue(InputType type, unsigned char id, char value, bool isr) {
 void processCommandTask(void *pvParameters) {
     InputCommand recvCmd;
 
+    #ifdef DEBUG
     Serial.println("Freertos task started");
+    #endif
 
     while(1) {
         if (xQueueReceive(commandQueueHandle, &recvCmd, portMAX_DELAY) == pdPASS) {
@@ -104,7 +106,7 @@ void setupQueue() {
     commandQueueHandle = xQueueCreate(QUEUE_SLOTS, sizeof(InputCommand));
 
     if (commandQueueHandle == NULL) {
-        Serial.println("Error: failed to crate queue. Program halted");
+        Serial.println("Error: failed to create queue. Program halted");
         while (1);
     }
 }
