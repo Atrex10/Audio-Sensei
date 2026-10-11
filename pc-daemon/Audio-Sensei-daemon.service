@@ -7,7 +7,7 @@ Type=simple
 
 WorkingDirectory=%h/.local/share/Audio-Sensei-daemon
 Environment="PYTHONUNBUFFERED=1"
-ExecStart=%h/.local/share/Audio-Sensei-daemon/.venv/bin/python %h/.local/share/Audio-Sensei-daemon/main.py --mapping %h/.config/Audio-Sensei-daemon/mapping.json --config %h/.config/Audio-Sensei-daemon/config.toml
+ExecStart=%h/.local/share/Audio-Sensei-daemon/.venv/bin/python -OO %h/.local/share/Audio-Sensei-daemon/main.py --mapping %h/.config/Audio-Sensei-daemon/mapping.json --config %h/.config/Audio-Sensei-daemon/config.toml
 
 Restart=always
 RestartSec=5
