@@ -16,7 +16,7 @@ def main() -> None:
 
     # config the logger
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.WARNING,
         format="%(asctime)s [%(levelname)s] %(message)s"
     )
 

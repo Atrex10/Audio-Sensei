@@ -131,7 +131,7 @@ class PlaybackController:
         for key in METADATA_KEYS:
             result = subprocess.run(["playerctl", "metadata", key], capture_output=True, text=True)
             logging.debug(f"playerctl metadata {key}: {result.stdout.strip()}")
-            print(result.stdout.strip())
+            logging.debug(result.stdout.strip())
             if result.stdout.strip():
                 metadata[key] = result.stdout.strip()
             else:

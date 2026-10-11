@@ -1,5 +1,6 @@
 import logging
 import serial
+import glob
 import json
 import tomllib
 import sys
@@ -8,12 +9,10 @@ import argparse
 import os
 import subprocess
 
-import command_mapping
-
 # Logger init
 # Default logging to stdout, systemd will redirect to journalctl
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
@@ -25,6 +24,10 @@ HANDLER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "handler.py")
 
 # only for testing
 # test_line: str = '{ "type": "command", "id": 2, "status": "OK", "input": "encoder", "inputID": 0, "value": 2 }'
+
+def find_controller_port(product_name: str = "AudioSensei_Controller"):
+    matches = glob.glob(f"/dev/serial/by-id/*{product_name}*")
+    return matches[0] if matches else None
 
 
 def loadConfig(configPath: str) -> dict:
@@ -93,7 +96,7 @@ def main() -> None:
     config = loadConfig(args.config)
 
     try:
-        config["serial"]["port"]
+        config["serial"]["product"]
         config["serial"]["baudrate"]
     except KeyError:
         logging.critical("Invalid configuration file, some fields may be missing")
@@ -101,9 +104,16 @@ def main() -> None:
 
     while True:
         try:
-            logging.debug(f"Connecting to {config["serial"]["port"]}...")
-            with serial.Serial(config["serial"]["port"], config["serial"]["baudrate"], timeout=None) as ser:
-                logging.info(f"Connected to {config["serial"]["port"]}")
+            logging.debug(f"Searching for serial port for {config["serial"]["product"]}...")
+            port = find_controller_port(config["serial"]["product"])
+            if not port:
+                logging.debug(f"Serial port for {config["serial"]["product"]} not found, retrying in 10s...")
+                time.sleep(10)
+                continue
+
+            logging.debug(f"Connecting to {port}...")
+            with serial.Serial(port, config["serial"]["baudrate"], timeout=None) as ser:
+                logging.info(f"Connected to {port}")
 
                 while True:
                     raw_line: str = ser.readline().decode("utf-8", errors="ignore").strip()
@@ -121,8 +131,6 @@ def main() -> None:
                         continue
 
                     if isinstance(data, dict) and "input" in data and "inputID" in data:
-                        msg_id: int = data.get("id", "0")
-
                         try:
                             proc = subprocess.run(
                                 [sys.executable, HANDLER, args.mapping],
@@ -139,14 +147,14 @@ def main() -> None:
                             logging.error(f"Handler failed: {e}")
                             status, response = "ERROR", "ERROR"
 
-                        sendResponse(ser, status, response, msg_id)
+                        sendResponse(ser, status, response, data.get("id", "0"))
 
                     else:
                         logging.warning(f'No "command" field in packet: {data}')
 
 
         except serial.SerialException as e:
-            logging.debug(f"Failed serial port connection with {config["serial"]["port"]}: {e}. Reconnecting in 1s...")
+            logging.error(f"Failed serial port connection with {config["serial"]["port"]}: {e}. Reconnecting in 1s...")
             time.sleep(1)
 
         except Exception as e:
