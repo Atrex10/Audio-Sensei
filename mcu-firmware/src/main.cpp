@@ -54,7 +54,7 @@ const int updateOutputsInterval = 500;  // ms, how often the outputs loop execut
 // will trigger before the given function executes
 // 200ms interval & 20 cycles executes every 4000ms
 const int updateOutputsStateBufferCycles = 10;
-const int renderOutputsLcdCycles = 10;  //  no need to be faster than state buffer update (above)
+const int renderOutputsLcdCycles = 2;  //  no need to be faster than state buffer update (above), unless for better responsiveness
 const int incrementOutputsAnimationCycles = 1;
 
 uint32_t updateOutputsCycleCounter = 0;
@@ -114,6 +114,10 @@ void updateInputs() {
         value = buttons[i].readAndReset();
         if (checkInputActivity(value)) {
             sendCmd2Queue(BUTTON, i, value, true);
+
+            #ifdef AUTO_READ_STATE_AFTER_BUTTON
+            sendReadCmd2Queue(true);  // read the state imidietly for ui responsiveness
+            #endif
 
             #ifdef DEBUG
             Serial.println("Detected button press");

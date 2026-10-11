@@ -2,6 +2,7 @@
 #define MAIN_HEADER_H
 
 // #define DEBUG
+#define AUTO_READ_STATE_AFTER_BUTTON
 
 #include "state-buffer.h"
 

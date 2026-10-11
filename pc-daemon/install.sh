@@ -29,6 +29,12 @@ deactivate
 # copying source code
 cp -r ./ /home/$USER/.local/share/Audio-Sensei-daemon/
 
+# remove the unecesary files from the source code directory
+rm /home/$USER/.local/share/Audio-Sensei-daemon/mapping.json
+rm /home/$USER/.local/share/Audio-Sensei-daemon/config.toml
+rm /home/$USER/.local/share/Audio-Sensei-daemon/install.sh
+rm /home/$USER/.local/share/Audio-Sensei-daemon/uninstall.sh
+
 # copying mapping file 
 cp ./mapping.json /home/$USER/.config/Audio-Sensei-daemon/mapping.json
 
