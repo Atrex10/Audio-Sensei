@@ -3,7 +3,9 @@
 void beginSerial() {
     Serial.begin(115200);
     while (!Serial) {;}  // wait for serial to initialize
+    // #ifdef DEBUG
     Serial.println("Serial started");
+    // #endif
 }
 
 void sendJson(uint8_t inputType, uint8_t inputId, int8_t inputValue, unsigned int id) {
@@ -38,6 +40,7 @@ void sendJson(uint8_t inputType, uint8_t inputId, int8_t inputValue, unsigned in
 
     // send the json through terminal
     serializeJson(doc, Serial);
+    Serial.print('\n');
 }
 
 JsonDocument waitAndReadAck(int timeoutMs) {

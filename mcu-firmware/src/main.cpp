@@ -60,7 +60,7 @@ const int incrementOutputsAnimationCycles = 1;
 uint32_t updateOutputsCycleCounter = 0;
 
 
-unsigned int idCounter = 0;
+unsigned long idCounter = 0;
 
 // OBJECTS
 Ticker updateInputsTicker;

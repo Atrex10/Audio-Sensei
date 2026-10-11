@@ -104,7 +104,7 @@ void setupQueue() {
     commandQueueHandle = xQueueCreate(QUEUE_SLOTS, sizeof(InputCommand));
 
     if (commandQueueHandle == NULL) {
-        Serial.println("Error: failed to crate queue. Program halted");
+        Serial.println("Error: failed to create queue. Program halted");
         while (1);
     }
 }
