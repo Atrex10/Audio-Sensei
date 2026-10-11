@@ -3,10 +3,10 @@ import serial
 import json
 import tomllib
 import sys
-from pathlib import Path
 import time
 import argparse
 import os
+import subprocess
 
 import command_mapping
 
@@ -17,6 +17,8 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
+HANDLER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "handler.py")
+
 # VARIABLES
 # SERIAL_PORT: str = "/tmp/ACM0"
 # BAUD_RATE: int = 115200
@@ -26,12 +28,11 @@ logging.basicConfig(
 
 
 def loadConfig(configPath: str) -> dict:
-    path = Path(configPath)
-    if not path.is_file():
+    if not os.path.isfile(configPath):
         logging.critical(f"Config error: {configPath} does not exist")
         sys.exit(1)
 
-    with open(path, "rb") as f:
+    with open(configPath, "rb") as f:
         data = tomllib.load(f)
         logging.debug(f"Loaded config:\n{data}")
         return data
@@ -88,8 +89,7 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # load the mapping json file
-    mapping = command_mapping.loadMapping(args.mapping)
+    # load the config toml file
     config = loadConfig(args.config)
 
     try:
@@ -102,7 +102,7 @@ def main() -> None:
     while True:
         try:
             logging.debug(f"Connecting to {config["serial"]["port"]}...")
-            with serial.Serial(config["serial"]["port"], config["serial"]["baudrate"], timeout=1) as ser:
+            with serial.Serial(config["serial"]["port"], config["serial"]["baudrate"], timeout=None) as ser:
                 logging.info(f"Connected to {config["serial"]["port"]}")
 
                 while True:
@@ -121,29 +121,24 @@ def main() -> None:
                         continue
 
                     if isinstance(data, dict) and "input" in data and "inputID" in data:
-                        cmd_input = data.get("input")
-                        cmd_inputID = data.get("inputID")
-                        cmd_value = data.get("value")
                         msg_id: int = data.get("id", "0")
 
-                        logging.debug(f"Decoded JSON command:\ninput: {cmd_input}\ninput ID: {cmd_inputID}\nvalue: {cmd_value}\nmessage id: {msg_id}")
-
-                        # Safely convert cmd_value & cmd_inputID to int when possible
                         try:
-                            cmd_value_int = int(cmd_value) if cmd_value is not None else 0
-                        except (ValueError, TypeError):
-                            logging.warning(f"Invalid input value: {cmd_value}. Using 0")
-                            cmd_value_int = 0
-                        try:
-                            cmd_inputID_int = int(cmd_inputID) if cmd_inputID is not None else 0
-                        except (ValueError, TypeError):
-                            logging.warning(f"Invalid input ID: {cmd_inputID}. Using 0")
-                            cmd_inputID_int = 0
+                            proc = subprocess.run(
+                                [sys.executable, HANDLER, args.mapping],
+                                input=raw_line, text=True,
+                                stdout=subprocess.PIPE,  # stderr is inherited -> goes to journald
+                                timeout=10
+                                )
 
-                        # executing the command
-                        success, response = command_mapping.executeCommand(mapping, str(cmd_input), cmd_inputID_int, cmd_value_int)
+                            result = json.loads(proc.stdout)
+                            status = "OK" if result["success"] else "ERROR"
+                            response = result["response"]
 
-                        status = "OK" if success else "ERROR"
+                        except Exception as e:
+                            logging.error(f"Handler failed: {e}")
+                            status, response = "ERROR", "ERROR"
+
                         sendResponse(ser, status, response, msg_id)
 
                     else:
