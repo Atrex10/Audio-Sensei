@@ -22,29 +22,31 @@
 // encoders
 const int encoderCount = 4;
 Encoder encoders[encoderCount] = {
-    Encoder(6, 10),
-    Encoder(7, 11),
-    Encoder(8, 12),
-    Encoder(9, 13),
+    Encoder(4, 3),
+    Encoder(7, 6),
+    Encoder(10, 9),
+    Encoder(13, 12),
 };
 
 // buttons
 const int buttonCount = 10;
 Button buttons[buttonCount] = {
     // encoder buttons
-    Button(21),
-    Button(20),
-    Button(19),
-    Button(18),
-    // regular buttons
-    Button(0),
-    Button(1),
     Button(2),
-    Button(3),
-    Button(4),
-    Button(5)
+    Button(5),
+    Button(8),
+    Button(11),
+    // regular buttons
+    Button(14),
+    Button(15),
+    Button(26),
+    Button(27),
+    Button(28),
+    Button(29)
 };
 
+const int lcdSda = 0;
+const int lcdScl = 1;
 
 // VARIABLES
 const int updateInputsInterval = 100;  // ms

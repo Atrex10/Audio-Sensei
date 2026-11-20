@@ -96,9 +96,10 @@ public:
         lcd = lcdInstance;
 
         // wire begin
-        Wire.setSDA(16);
-        Wire.setSCL(17);
+        Wire.setSDA(lcdSda);
+        Wire.setSCL(lcdScl);
         Wire.begin();
+
 
         lcd->init();
         lcd->clear();

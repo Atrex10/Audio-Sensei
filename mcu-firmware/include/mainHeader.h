@@ -8,6 +8,9 @@
 
 extern unsigned long idCounter;
 
+extern const int lcdSda;
+extern const int lcdScl;
+
 extern StateBuffer stateBuffer;
 
 #endif

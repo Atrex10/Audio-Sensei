@@ -154,7 +154,7 @@ def main() -> None:
 
 
         except serial.SerialException as e:
-            logging.error(f"Failed serial port connection with {config["serial"]["port"]}: {e}. Reconnecting in 1s...")
+            logging.error(f"Failed serial port connection with {config["serial"]["product"]}: {e}. Reconnecting in 1s...")
             time.sleep(1)
 
         except Exception as e:
