@@ -8,6 +8,8 @@
 #include "state-buffer.h"
 #include "outputs.h"
 
+#define INPUT_LED_FLASH_MS 100
+
 // variables
 // INPUTS DEFINITIONS
 
@@ -78,7 +80,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 UserInterface userInterface(&lcd);  // user interface object
 
 // leds object (created and begin-ed even if not using leds)
-SignalLeds sigLeds;
+SignalLeds sigLeds(ledPins);
 
 // state buffer
 StateBuffer stateBuffer;
@@ -105,6 +107,7 @@ void updateInputs() {
                 #ifdef DEBUG
                 Serial.println("Detected encoder turn");
                 #endif
+                sigLeds.flash(L_INPUT, INPUT_LED_FLASH_MS);
                 encoders[i].startInputGrouperTimer();  // start the input group
             }
         } else {
@@ -131,6 +134,7 @@ void updateInputs() {
             #ifdef DEBUG
             Serial.println("Detected button press");
             #endif
+            sigLeds.flash(L_INPUT, INPUT_LED_FLASH_MS);
         }
     }
 }
@@ -151,17 +155,20 @@ void updateOutputs() {
 
 // SETUP & LOOP
 void setup() {
-    // state buffer setup
-    stateBuffer.begin();
-
-    // user interface setup
-    userInterface.begin();
-
     // LED-s setup
     sigLeds.begin();
     sigLeds.flash(L_INPUT, 500);
     sigLeds.flash(L_BUSY, 500);
     sigLeds.flash(L_ERROR, 500);
+
+    // state buffer setup
+    if (!stateBuffer.begin()) {
+        sigLeds.turnOn(L_ERROR);
+        while(1);
+    }
+
+    // user interface setup
+    userInterface.begin();
 
     // inputs setup
     for (int i=0; i<encoderCount; i++) {

@@ -6,6 +6,7 @@
 #define USE_SIG_LEDS
 
 #include "state-buffer.h"
+#include "signalLeds.h"
 
 extern unsigned long idCounter;
 
@@ -13,6 +14,7 @@ extern const int lcdSda;
 extern const int lcdScl;
 
 extern const int ledPins[3];
+extern SignalLeds sigLeds;
 
 extern StateBuffer stateBuffer;
 

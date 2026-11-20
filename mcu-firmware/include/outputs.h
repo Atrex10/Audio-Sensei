@@ -5,7 +5,6 @@
 #include <Wire.h>
 #include <FreeRTOS.h>
 #include <task.h>
-#include <timers.h>
 
 #include "mainHeader.h"
 #include "state-buffer.h"
@@ -21,62 +20,6 @@
 extern LiquidCrystal_I2C lcd;
 
 extern const uint8_t playingAnimationFrames[2][4][8];
-
-enum LedFunction {
-    L_INPUT,
-    L_BUSY,
-    L_ERROR
-};
-
-class SignalLeds {
-public:
-    void begin() {
-        #ifdef USE_SIG_LEDS
-        for (int i = 0; i < 3; i++) {
-            pins[i] = ledPins[i];
-            pinMode(pins[i], OUTPUT);
-            digitalWrite(pins[i], LOW);
-            timers[i] = xTimerCreate("led", pdMS_TO_TICKS(100), pdFALSE,
-                                     (void*)(intptr_t)pins[i], ledOff);
-        }
-        #endif
-    }
-
-    void flash(LedFunction led, uint32_t durationMs) {
-        #ifdef USE_SIG_LEDS
-        digitalWrite(pins[led], HIGH);
-        xTimerChangePeriod(timers[led], pdMS_TO_TICKS(durationMs), 0);  // also (re)starts it
-        #endif
-    }
-
-    void turnOn(LedFunction led) {
-        #ifdef USE_SIG_LEDS
-        digitalWrite(pins[led], HIGH);
-        #endif
-    }
-
-    void turnOff(LedFunction led) {
-        #ifdef USE_SIG_LEDS
-        digitalWrite(pins[led], LOW);
-        #endif
-    }
-
-    void toggle(LedFunction led) {
-        #ifdef USE_SIG_LEDS
-        digitalWrite(pins[led], !digitalRead(pins[led]));
-        #endif
-    }
-
-private:
-    #ifdef USE_SIG_LEDS
-    static void ledOff(TimerHandle_t t) {
-        digitalWrite((int)(intptr_t)pvTimerGetTimerID(t), LOW);
-    }
-
-    int pins[3];
-    TimerHandle_t timers[3];
-    #endif
-};
 
 class LcdUserInterface{
 private:

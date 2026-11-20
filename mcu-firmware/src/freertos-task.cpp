@@ -37,6 +37,7 @@ void processCommandTask(void *pvParameters) {
             #ifdef DEBUG
             Serial.println("Received command");
             #endif
+            sigLeds.turnOn(L_BUSY);
             
             while (ackController.readCommState().ackState != FREE) {} // wait for the ackController to be free
 
@@ -65,6 +66,8 @@ void processCommandTask(void *pvParameters) {
                 #ifdef DEBUG
                 Serial.println("Received ack, it is invalid. Skipping");
                 #endif
+                sigLeds.flash(L_ERROR, 200);
+
                 ackController.reportAckSkip();
             } else if (waitForData) {
                 #ifdef DEBUG
@@ -76,6 +79,7 @@ void processCommandTask(void *pvParameters) {
                     #ifdef DEBUG
                     Serial.println("Failed to write json to state buffer");
                     #endif
+                    sigLeds.flash(L_ERROR, 400);
                 }
 
             } else {
@@ -83,6 +87,8 @@ void processCommandTask(void *pvParameters) {
                 Serial.println("Received ack, nothing worth attention");
                 #endif
             }
+
+            sigLeds.turnOff(L_BUSY);
         }
     }
 }
@@ -105,6 +111,7 @@ void setupQueue() {
 
     if (commandQueueHandle == NULL) {
         Serial.println("Error: failed to create queue. Program halted");
+        sigLeds.turnOn(L_ERROR);
         while (1);
     }
 }
