@@ -45,6 +45,10 @@ Button buttons[buttonCount] = {
     Button(29)
 };
 
+#ifdef USE_SIG_LEDS
+    const int ledPins[3] = {25, 24, 23};  // order is: input (green), busy (blue), error (red)
+#endif
+
 const int lcdSda = 0;
 const int lcdScl = 1;
 
@@ -72,6 +76,9 @@ Ticker updateOutputsTicker;
 // lcd object definition
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 UserInterface userInterface(&lcd);  // user interface object
+
+// leds object (created and begin-ed even if not using leds)
+SignalLeds sigLeds;
 
 // state buffer
 StateBuffer stateBuffer;
@@ -149,6 +156,12 @@ void setup() {
 
     // user interface setup
     userInterface.begin();
+
+    // LED-s setup
+    sigLeds.begin();
+    sigLeds.flash(L_INPUT, 500);
+    sigLeds.flash(L_BUSY, 500);
+    sigLeds.flash(L_ERROR, 500);
 
     // inputs setup
     for (int i=0; i<encoderCount; i++) {

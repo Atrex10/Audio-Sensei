@@ -35,7 +35,7 @@ class Button {
     private:
         volatile bool clicked = false;
 
-        volatile int debounceLockoutMillis = 160;
+        volatile int debounceLockoutMillis = 200;
         volatile unsigned long lastPressMillis = 0;
 
         static void isrWrapper(void* arg) {
